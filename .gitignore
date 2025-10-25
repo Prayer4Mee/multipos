@@ -1,0 +1,44 @@
+# CodeIgniter 4
+writable/logs/*
+writable/session/*
+writable/uploads/*
+writable/cache/*
+!writable/logs/.gitkeep
+!writable/session/.gitkeep
+!writable/uploads/.gitkeep
+!writable/cache/.gitkeep
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vendor
+vendor/
+
+# Node modules
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Database
+*.sql
+*.db
+
+# Backup files
+*.bak
+*.backup
+*.orig

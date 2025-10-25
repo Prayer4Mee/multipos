@@ -1,0 +1,8 @@
+# .htaccess in /var/www/html/multipos/
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Rule to send all non-existent files/directories to the 'public' folder
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/index.php/$1 [L]
+</IfModule>
