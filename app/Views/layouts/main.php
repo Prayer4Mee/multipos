@@ -200,9 +200,10 @@
     <script>
         // Global JavaScript variables
         window.TOUCHPOINT = {
-            baseUrl: '<?= base_url("restaurant/{$tenant->tenant_slug}") ?>',
-            tenantSlug: '<?= $tenant_slug ?>',
-            currentUser: <?= json_encode($current_user) ?>,
+            baseUrl: '<?= base_url() ?>',
+            restaurantSlug: '<?= (isset($tenant) && !empty($tenant)) ? $tenant->tenant_slug : "unknown" ?>',
+            tenantSlug: '<?= (isset($tenant) && !empty($tenant)) ? $tenant->tenant_slug : "unknown" ?>',
+            currentUser: <?= json_encode($current_user ?? []) ?>,
             csrfToken: '<?= csrf_hash() ?>',
             settings: <?= json_encode($tenant ?? []) ?>
         };

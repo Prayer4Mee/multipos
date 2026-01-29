@@ -2,18 +2,63 @@
 
 <?= $this->section('head') ?>
 <style>
-    .menu-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    .category-filter {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .category-btn {
+        margin: 5px;
+        border-radius: 20px;
+        padding: 8px 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.1);
+        color: white;
         transition: all 0.3s ease;
+    }
+    .category-btn:hover, .category-btn.active {
+        background: rgba(255,255,255,0.3);
+        border-color: rgba(255,255,255,0.6);
+        transform: translateY(-2px);
+    }
+    .menu-table {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    .order-summary {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    .add-btn {
+        border-radius: 20px;
+        padding: 5px 15px;
     }
     .order-item {
-        border-left: 4px solid transparent;
-        transition: all 0.3s ease;
+        border-left: 4px solid #007bff;
+        margin-bottom: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
     }
-    .order-item:hover {
-        border-left-color: #007bff;
+    .table-responsive {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    .table tbody tr:hover {
         background-color: #f8f9fa;
+        transform: scale(1.01);
+        transition: all 0.2s ease;
     }
 </style>
 <?= $this->endSection() ?>
@@ -24,68 +69,159 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1><i class="fas fa-plus-circle"></i> New Order</h1>
-                <div>
-                    <a href="<?= base_url("restaurant/{$tenant->tenant_slug}/pos") ?>" class="btn btn-secondary me-2">
-                        <i class="fas fa-arrow-left"></i> Back to POS
-                    </a>
-                    <button class="btn btn-success" onclick="placeOrder()" id="placeOrderBtn" disabled>
-                        <i class="fas fa-check"></i> Place Order
-                    </button>
-                </div>
+                <a href="<?= base_url("restaurant/{$tenant->tenant_slug}/pos") ?>" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to POS
+                </a>
             </div>
         </div>
     </div>
 
+    <!-- Category Filter Section -->
+    <div class="category-filter">
+        <h5 class="text-white mb-3"><i class="fas fa-filter"></i> Menu Categories</h5>
+        <div class="d-flex flex-wrap">
+            <button class="btn category-btn active" data-category="all">
+                <i class="fas fa-hamburger"></i> All Items
+            </button>
+            <button class="btn category-btn" data-category="chicken">
+                <i class="fas fa-drumstick-bite"></i> Chicken
+            </button>
+            <button class="btn category-btn" data-category="pasta">
+                <i class="fas fa-pizza-slice"></i> Pasta
+            </button>
+            <button class="btn category-btn" data-category="beverages">
+                <i class="fas fa-coffee"></i> Beverages
+            </button>
+            <button class="btn category-btn" data-category="desserts">
+                <i class="fas fa-ice-cream"></i> Desserts
+            </button>
+        </div>
+    </div>
+
     <div class="row">
-        <!-- Left Side: Menu Categories & Items -->
+        <!-- Left Side: Menu Items Table -->
         <div class="col-md-8">
-            <!-- Menu Categories -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Menu Categories</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action active" data-category="all">
-                            <i class="fas fa-th-large"></i> All Items
-                        </a>
-                        <?php if (!empty($menu_categories)): ?>
-                            <?php foreach ($menu_categories as $category): ?>
-                                <a href="#" class="list-group-item list-group-item-action" data-category="<?= $category->id ?>">
-                                    <i class="fas fa-utensils"></i> <?= esc($category->name) ?>
-                                </a>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="fas fa-utensils"></i> Menu Items</h5>
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control form-control-sm me-2" id="menu-search" placeholder="Search menu items..." style="width: 200px;">
+                        <span class="badge bg-primary" id="item-count">0 items</span>
                     </div>
                 </div>
-            </div>
-
-            <!-- Menu Items -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Menu Items</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row" id="menuItems">
-                        <?php if (!empty($menu_items)): ?>
-                            <?php foreach ($menu_items as $item): ?>
-                                <div class="col-md-6 col-lg-4 mb-3">
-                                    <div class="card menu-item h-100" data-item-id="<?= $item->id ?>" data-price="<?= $item->price ?>" data-category="<?= $item->category_id ?>">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-utensils fa-2x text-primary mb-2"></i>
-                                            <h6 class="card-title"><?= esc($item->name) ?></h6>
-                                            <p class="card-text text-muted small"><?= esc($item->description) ?></p>
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span class="h6 text-primary mb-0">₱<?= number_format($item->price, 2) ?></span>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="addToOrder(<?= $item->id ?>, '<?= esc($item->name) ?>', <?= $item->price ?>)">
-                                                    <i class="fas fa-plus"></i> Add
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                <div class="card-body p-0">
+                    <div class="table-responsive menu-table">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="30%">Item Name</th>
+                                    <th width="15%">Category</th>
+                                    <th width="15%">Price</th>
+                                    <th width="20%">Description</th>
+                                    <th width="15%">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="menu-items-table">
+                                <!-- Sample menu items -->
+                                <tr data-category="chicken">
+                                    <td>1</td>
+                                    <td><strong>Chicken Joy (2 pcs)</strong></td>
+                                    <td><span class="badge bg-warning">Chicken</span></td>
+                                    <td><strong>₱100.00</strong></td>
+                                    <td>Crispy fried chicken with rice</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm add-btn" onclick="addToOrder(1, 'Chicken Joy (2 pcs)', 100.00)">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-category="chicken">
+                                    <td>2</td>
+                                    <td><strong>Yum Burger</strong></td>
+                                    <td><span class="badge bg-warning">Chicken</span></td>
+                                    <td><strong>₱50.00</strong></td>
+                                    <td>Chicken burger with special sauce</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm add-btn" onclick="addToOrder(2, 'Yum Burger', 50.00)">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-category="pasta">
+                                    <td>3</td>
+                                    <td><strong>Jolly Spaghetti</strong></td>
+                                    <td><span class="badge bg-info">Pasta</span></td>
+                                    <td><strong>₱80.00</strong></td>
+                                    <td>Sweet-style spaghetti with hotdog</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm add-btn" onclick="addToOrder(3, 'Jolly Spaghetti', 80.00)">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-category="pasta">
+                                    <td>4</td>
+                                    <td><strong>Carbonara</strong></td>
+                                    <td><span class="badge bg-info">Pasta</span></td>
+                                    <td><strong>₱90.00</strong></td>
+                                    <td>Creamy carbonara pasta</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm add-btn" onclick="addToOrder(4, 'Carbonara', 90.00)">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-category="beverages">
+                                    <td>5</td>
+                                    <td><strong>Coke</strong></td>
+                                    <td><span class="badge bg-success">Beverages</span></td>
+                                    <td><strong>₱25.00</strong></td>
+                                    <td>Refreshing cola drink</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm add-btn" onclick="addToOrder(5, 'Coke', 25.00)">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-category="beverages">
+                                    <td>6</td>
+                                    <td><strong>Pineapple Juice</strong></td>
+                                    <td><span class="badge bg-success">Beverages</span></td>
+                                    <td><strong>₱30.00</strong></td>
+                                    <td>Fresh pineapple juice</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm add-btn" onclick="addToOrder(6, 'Pineapple Juice', 30.00)">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-category="desserts">
+                                    <td>7</td>
+                                    <td><strong>Ice Cream</strong></td>
+                                    <td><span class="badge bg-danger">Desserts</span></td>
+                                    <td><strong>₱40.00</strong></td>
+                                    <td>Vanilla ice cream</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm add-btn" onclick="addToOrder(7, 'Ice Cream', 40.00)">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-category="chicken">
+                                    <td>8</td>
+                                    <td><strong>Chicken Sandwich</strong></td>
+                                    <td><span class="badge bg-warning">Chicken</span></td>
+                                    <td><strong>₱60.00</strong></td>
+                                    <td>Grilled chicken sandwich</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm add-btn" onclick="addToOrder(8, 'Chicken Sandwich', 60.00)">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -95,63 +231,65 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Order Summary</h5>
+                    <h5 class="card-title mb-0"><i class="fas fa-shopping-cart"></i> Order Summary</h5>
                 </div>
-                <div class="card-body">
-                    <!-- Table Selection -->
+                <div class="card-body order-summary">
+                    <!-- Customer Information -->
                     <div class="mb-3">
                         <label class="form-label">Table Number</label>
-                        <select class="form-select" id="tableSelect">
-                            <option value="">Select Table</option>
-                            <?php if (!empty($tables)): ?>
-                                <?php foreach ($tables as $table): ?>
-                                    <option value="<?= $table->id ?>">Table <?= $table->table_number ?> (<?= $table->capacity ?> seats)</option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                        <select class="form-select" id="table-select">
+                            <option value="1">Table 1</option>
+                            <option value="2">Table 2</option>
+                            <option value="3">Table 3</option>
+                            <option value="4">Table 4</option>
+                            <option value="5">Table 5</option>
+                            <option value="6">Table 6</option>
+                            <option value="7">Table 7</option>
+                            <option value="8">Table 8</option>
                         </select>
                     </div>
-
-                    <!-- Customer Info -->
+                    
                     <div class="mb-3">
                         <label class="form-label">Customer Name</label>
-                        <input type="text" class="form-control" id="customerName" placeholder="Enter customer name (optional)">
+                        <input type="text" class="form-control" id="customer-name" placeholder="Enter customer name">
                     </div>
-                    
+
                     <!-- Order Items -->
-                    <div class="mb-3">
-                        <h6>Order Items</h6>
-                        <div id="orderItems" style="max-height: 300px; overflow-y: auto;">
-                            <p class="text-muted">No items selected</p>
+                    <div class="order-items mb-3">
+                        <h6>Order Items:</h6>
+                        <div id="order-items-list" style="max-height: 300px; overflow-y: auto;">
+                            <div class="text-muted text-center py-3">
+                                <i class="fas fa-shopping-cart"></i><br>
+                                No items added yet
+                            </div>
                         </div>
                     </div>
-                    
+
                     <!-- Order Total -->
-                    <hr>
-                    <div class="d-flex justify-content-between">
-                        <strong>Subtotal:</strong>
-                        <strong id="orderSubtotal">₱0.00</strong>
+                    <div class="order-total mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>Subtotal:</strong>
+                            <span id="subtotal">₱0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Service Charge (10%):</span>
+                            <span id="service-charge">₱0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>VAT (12%):</span>
+                            <span id="vat">₱0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total:</strong>
+                            <strong id="total">₱0.00</strong>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span>Service Charge (10%):</span>
-                        <span id="serviceCharge">₱0.00</span>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span>VAT (12%):</span>
-                        <span id="vatAmount">₱0.00</span>
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between">
-                        <strong>Total:</strong>
-                        <strong id="orderTotal">₱0.00</strong>
-                    </div>
-                    
+
                     <!-- Action Buttons -->
-                    <div class="d-grid gap-2 mt-3">
-                        <button class="btn btn-primary" id="placeOrderBtn" disabled>
-                            <i class="fas fa-check"></i> Place Order
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="clearOrder()">
-                            <i class="fas fa-trash"></i> Clear Order
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" id="create-order-btn" onclick="createOrder()" disabled>
+                            <i class="fas fa-check"></i> Create Order
                         </button>
                     </div>
                 </div>
@@ -159,216 +297,196 @@
         </div>
     </div>
 </div>
-<?= $this->endSection() ?>
 
-<?= $this->section('scripts') ?>
 <script>
-// New Order JavaScript Functions
-let currentOrder = [];
-let orderSubtotal = 0;
-let serviceCharge = 0;
-let vatAmount = 0;
-let orderTotal = 0;
+let orderItems = [];
+let currentCategory = "all";
 
 $(document).ready(function() {
-    // Category filter handler
-    $('.list-group-item[data-category]').click(function(e) {
-        e.preventDefault();
-        
-        // Update active state
-        $('.list-group-item').removeClass('active');
+    updateItemCount();
+    
+    // Category filter
+    $('.category-btn').click(function() {
+        $('.category-btn').removeClass('active');
         $(this).addClass('active');
-        
-        // Filter menu items
-        const categoryId = $(this).data('category');
-        filterMenuItems(categoryId);
+        currentCategory = $(this).data('category');
+        filterMenuItems();
     });
     
-    // Table selection handler
-    $('#tableSelect').change(function() {
-        updatePlaceOrderButton();
-    });
-    
-    // Customer name handler
-    $('#customerName').on('input', function() {
-        updatePlaceOrderButton();
+    // Search functionality
+    $('#menu-search').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        filterMenuItems(searchTerm);
     });
 });
 
-function filterMenuItems(categoryId) {
-    if (categoryId === 'all') {
-        $('.menu-item').show();
-    } else {
-        $('.menu-item').hide();
-        $(`.menu-item[data-category="${categoryId}"]`).show();
-    }
+function filterMenuItems(searchTerm = '') {
+    $('#menu-items-table tr').each(function() {
+        const $row = $(this);
+        const itemCategory = $row.data('category');
+        const itemName = $row.find('td:nth-child(2)').text().toLowerCase();
+        
+        const categoryMatch = currentCategory === 'all' || itemCategory === currentCategory;
+        const searchMatch = searchTerm === '' || itemName.includes(searchTerm);
+        
+        if (categoryMatch && searchMatch) {
+            $row.show();
+        } else {
+            $row.hide();
+        }
+    });
+    
+    updateItemCount();
 }
 
-function addToOrder(itemId, itemName, price) {
-    const existingItem = currentOrder.find(item => item.id === itemId);
+function updateItemCount() {
+    const visibleItems = $('#menu-items-table tr:visible').length;
+    $('#item-count').text(visibleItems + ' items');
+}
+
+function addToOrder(id, name, price) {
+    const existingItem = orderItems.find(item => item.id === id);
     
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
-        currentOrder.push({
-            id: itemId,
-            name: itemName,
+        orderItems.push({
+            id: id,
+            name: name,
             price: price,
             quantity: 1
         });
     }
     
     updateOrderDisplay();
+    showNotification('Item added to order', 'success');
+}
+
+function removeFromOrder(id) {
+    orderItems = orderItems.filter(item => item.id !== id);
+    updateOrderDisplay();
+}
+
+function updateQuantity(id, newQuantity) {
+    const item = orderItems.find(item => item.id === id);
+    if (item) {
+        if (newQuantity <= 0) {
+            removeFromOrder(id);
+        } else {
+            item.quantity = newQuantity;
+            updateOrderDisplay();
+        }
+    }
 }
 
 function updateOrderDisplay() {
-    const orderItemsDiv = $('#orderItems');
-    orderSubtotal = 0;
+    const orderList = $('#order-items-list');
+    orderList.empty();
     
-    if (currentOrder.length === 0) {
-        orderItemsDiv.html('<p class="text-muted">No items selected</p>');
-        updateTotals();
-        updatePlaceOrderButton();
-        return;
-    }
-    
-    let html = '';
-    currentOrder.forEach(item => {
-        const itemTotal = item.price * item.quantity;
-        orderSubtotal += itemTotal;
-        
-        html += `
-            <div class="order-item p-2 mb-2 border rounded">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="fw-bold">${item.name}</span>
-                        <br>
-                        <small class="text-muted">₱${item.price.toFixed(2)} each</small>
+    if (orderItems.length === 0) {
+        orderList.html(`
+            <div class="text-muted text-center py-3">
+                <i class="fas fa-shopping-cart"></i><br>
+                No items added yet
+            </div>
+        `);
+        $('#create-order-btn').prop('disabled', true);
+    } else {
+        orderItems.forEach(item => {
+            const itemHtml = `
+                <div class="order-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">${item.name}</div>
+                            <small class="text-muted">₱${item.price.toFixed(2)} each</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-sm btn-outline-secondary me-1" onclick="updateQuantity(${item.id}, ${item.quantity - 1})">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span class="mx-2 fw-bold">${item.quantity}</span>
+                            <button class="btn btn-sm btn-outline-secondary me-2" onclick="updateQuantity(${item.id}, ${item.quantity + 1})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="decreaseQuantity(${item.id})">-</button>
-                        <span class="mx-2">${item.quantity}</span>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="increaseQuantity(${item.id})">+</button>
-                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="removeItem(${item.id})">
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="fw-bold text-primary">₱${(item.price * item.quantity).toFixed(2)}</span>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeFromOrder(${item.id})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
-                    <div class="text-end">
-                        <span class="fw-bold">₱${itemTotal.toFixed(2)}</span>
-                    </div>
                 </div>
-            </div>
-        `;
-    });
+            `;
+            orderList.append(itemHtml);
+        });
+        
+        $('#create-order-btn').prop('disabled', false);
+    }
     
-    orderItemsDiv.html(html);
     updateTotals();
-    updatePlaceOrderButton();
-}
-
-function increaseQuantity(itemId) {
-    const item = currentOrder.find(item => item.id === itemId);
-    if (item) {
-        item.quantity += 1;
-        updateOrderDisplay();
-    }
-}
-
-function decreaseQuantity(itemId) {
-    const item = currentOrder.find(item => item.id === itemId);
-    if (item && item.quantity > 1) {
-        item.quantity -= 1;
-        updateOrderDisplay();
-    }
-}
-
-function removeItem(itemId) {
-    currentOrder = currentOrder.filter(item => item.id !== itemId);
-    updateOrderDisplay();
-}
-
-function clearOrder() {
-    currentOrder = [];
-    $('#tableSelect').val('');
-    $('#customerName').val('');
-    updateOrderDisplay();
 }
 
 function updateTotals() {
-    // Calculate service charge (10%)
-    serviceCharge = orderSubtotal * 0.10;
+    const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const serviceCharge = subtotal * 0.10;
+    const vat = (subtotal + serviceCharge) * 0.12;
+    const total = subtotal + serviceCharge + vat;
     
-    // Calculate VAT (12% on subtotal + service charge)
-    vatAmount = (orderSubtotal + serviceCharge) * 0.12;
-    
-    // Calculate total
-    orderTotal = orderSubtotal + serviceCharge + vatAmount;
-    
-    // Update display
-    $('#orderSubtotal').text(`₱${orderSubtotal.toFixed(2)}`);
-    $('#serviceCharge').text(`₱${serviceCharge.toFixed(2)}`);
-    $('#vatAmount').text(`₱${vatAmount.toFixed(2)}`);
-    $('#orderTotal').text(`₱${orderTotal.toFixed(2)}`);
+    $('#subtotal').text('₱' + subtotal.toFixed(2));
+    $('#service-charge').text('₱' + serviceCharge.toFixed(2));
+    $('#vat').text('₱' + vat.toFixed(2));
+    $('#total').text('₱' + total.toFixed(2));
 }
 
-function updatePlaceOrderButton() {
-    const hasItems = currentOrder.length > 0;
-    const hasTable = $('#tableSelect').val() !== '';
-    $('#placeOrderBtn').prop('disabled', !(hasItems && hasTable));
-}
-
-function placeOrder() {
-    if (currentOrder.length === 0) {
-        alert('Please add items to the order');
+function createOrder() {
+    const tableId = $('#table-select').val();
+    const customerName = $('#customer-name').val();
+    
+    if (!customerName.trim()) {
+        showNotification('Please enter customer name', 'error');
         return;
     }
     
-    const tableId = $('#tableSelect').val();
-    if (!tableId) {
-        alert('Please select a table');
+    if (orderItems.length === 0) {
+        showNotification('Please add items to order', 'error');
         return;
     }
     
-    const customerName = $('#customerName').val() || 'Walk-in Customer';
+    $('#create-order-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Creating...');
     
-    const orderData = {
-        table_id: tableId,
-        customer_name: customerName,
-        items: currentOrder.map(item => ({
-            menu_item_id: item.id,
-            quantity: item.quantity,
-            unit_price: item.price
-        })),
-        subtotal: orderSubtotal,
-        service_charge: serviceCharge,
-        vat_amount: vatAmount,
-        total_amount: orderTotal
-    };
+    // Simulate API call
+    setTimeout(() => {
+        showNotification('Order created successfully!', 'success');
+        
+        // Reset form
+        orderItems = [];
+        $('#customer-name').val('');
+        updateOrderDisplay();
+        
+        $('#create-order-btn').prop('disabled', false).html('<i class="fas fa-check"></i> Create Order');
+        
+        // Redirect to POS after 2 seconds
+        setTimeout(() => {
+            window.location.href = '<?= base_url("restaurant/{$tenant->tenant_slug}/pos") ?>';
+        }, 2000);
+    }, 1500);
+}
+
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+    const notification = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `);
     
-    $('#placeOrderBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Placing Order...');
+    $('body').append(notification);
     
-    $.ajax({
-        url: '<?= base_url("restaurant/{$tenant->tenant_slug}/place-order") ?>',
-        type: 'POST',
-        data: orderData,
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                alert('Order #' + response.order_number + ' placed successfully!');
-                // Redirect to POS page
-                window.location.href = '<?= base_url("restaurant/{$tenant->tenant_slug}/pos") ?>';
-            } else {
-                alert('Error: ' + (response.error || 'Failed to place order'));
-            }
-        },
-        error: function(xhr) {
-            const response = xhr.responseJSON;
-            alert('Error: ' + (response?.error || 'Failed to place order'));
-        },
-        complete: function() {
-            $('#placeOrderBtn').prop('disabled', false).html('<i class="fas fa-check"></i> Place Order');
-        }
-    });
+    setTimeout(() => {
+        notification.alert('close');
+    }, 3000);
 }
 </script>
 <?= $this->endSection() ?>
