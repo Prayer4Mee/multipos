@@ -16,6 +16,7 @@ class BaseRestaurantController extends Controller
     /**
      * Instance of the main Request object.
      */
+    
     protected $request;
 
     /**
@@ -25,6 +26,10 @@ class BaseRestaurantController extends Controller
      */
     protected $helpers = ['url', 'form', 'session', 'cookie'];
 
+    // // Fix for: Creation of dynamic property ... is deprecated
+    // protected $session;    // Fixed warning for $this->session
+    // protected $data = [];  // Fixed warning for $this->data in setGlobalViewData()
+
     /**
      * Multi-tenant properties
      */
@@ -33,6 +38,8 @@ class BaseRestaurantController extends Controller
     protected $tenantDb;
     protected $currentUser;
     protected $userRole;
+
+    protected array $data = []; //deprecation warning so added this line
 
     /**
      * Constructor
@@ -54,7 +61,9 @@ class BaseRestaurantController extends Controller
         
         // Setup tenant-specific database
         $this->setupTenantDatabase();
-        
+        // Automatically use that tenant DB in models - pinadagdag ni AI
+        // $this->bindTenantDBToModels();
+
         // Load tenant configuration
         $this->loadTenantConfiguration();
         
@@ -133,8 +142,11 @@ class BaseRestaurantController extends Controller
             $customConfig = [
                 'hostname' => 'localhost',
                 'database' => "restaurant_{$this->tenantId}_db",
-                'username' => 'phpmyadmin',
-                'password' => 'zxcqwe123$',
+                // 'username' => 'phpmyadmin',
+                // 'password' => 'zxcqwe123$',
+                // Changed the username and password pakibalik nalang next time
+                'username' => 'root',
+                'password' => 'root',
                 'DBDriver' => 'MySQLi',
                 'DBPrefix' => '',
                 'pConnect' => false,
@@ -333,4 +345,14 @@ class BaseRestaurantController extends Controller
             return view($defaultView, $data);
         }
     }
+// Pinadagdag lang ito para ma bind yung tenant DB sa mga models
+    protected function bindTenantDBToModels(): void
+    {
+        foreach (get_object_vars($this) as $property) {
+            if ($property instanceof \App\Models\BaseModel) {
+                $property->setDB($this->tenantDb);
+            }
+        }
+    }
+
 }

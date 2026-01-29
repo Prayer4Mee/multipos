@@ -91,10 +91,12 @@
                     <thead>
                         <tr>
                             <th>Item Name</th>
+                            <th>Item Code</th>
                             <th>Category</th>
+                            <th>Unit of Measure</th>
                             <th>Current Stock</th>
-                            <th>Min Stock</th>
-                            <th>Unit Price</th>
+                            <th>Reorder Level</th>
+                            <th>Unit Cost</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -116,18 +118,36 @@
                                 ?>
                                 <tr>
                                     <td><?= esc($item->item_name) ?></td>
-                                    <td><?= esc($item->category) ?></td>
-                                    <td id="stock-<?= $item->id ?>"><?= number_format($item->current_stock, 0) ?></td>
-                                    <td><?= number_format($item->reorder_level, 0) ?></td>
-                                    <td>₱<?= number_format($item->unit_cost, 2) ?></td>
-                                    <td><span class="badge <?= $badgeClass ?>" id="status-<?= $item->id ?>"><?= $status ?></span></td>
+                                    <td><?= esc($item->item_code) ?: 'N/A' ?>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="editQuantity(<?= $item->id ?>, '<?= esc($item->item_name) ?>', <?= $item->current_stock ?>)">
+                                        <span class="badge bg-info"><?= ucfirst(esc($item->category)) ?></span>
+                                    </td>
+                                    <td><?= esc($item->unit_of_measure) ?></td>
+                                    <td id="stock-<?= $item->id ?>">
+                                        <strong><?= number_format($item->current_stock, 3) ?></strong>
+                                    </td>
+                                    <td><?= number_format($item->reorder_level, 3) ?></td>
+                                    <td>₱<?= number_format($item->unit_cost, 2) ?></td>
+                                    <td><?= esc($item->storage_location) ?: 'N/A' ?></td>
+                                    <td>
+                                        <span class="badge <?= $badgeClass ?>" id="status-<?= $item->id ?>">
+                                            <?= $status ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                         <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" 
+                                                onclick="editQuantity(<?= $item->id ?>, '<?= esc($item->item_name) ?>', 
+                                                <?= $item->current_stock ?>)"
+                                                title="Edit Stock">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteItem(<?= $item->id ?>)">
+                                        <button class="btn btn-outline-danger" 
+                                                onclick="deleteItem(<?= $item->id ?>)"
+                                                title="Delete Item">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                    </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -144,10 +164,10 @@
         </div>
     </div>
 </div>
-
+<!-- Form Field -->
 <!-- Add Item Modal -->
 <div class="modal fade" id="addItemModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Inventory Item</h5>
@@ -155,37 +175,74 @@
             </div>
             <div class="modal-body">
                 <form id="addItemForm">
-                    <div class="mb-3">
-                        <label class="form-label">Item Name</label>
-                        <input type="text" class="form-control" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Category</label>
-                        <select class="form-select" name="category" required>
-                            <option value="">Select Category</option>
-                            <option value="meat">Meat</option>
-                            <option value="vegetables">Vegetables</option>
-                            <option value="grains">Grains</option>
-                            <option value="beverages">Beverages</option>
-                        </select>
-                    </div>
+                    <!-- Add this hidden field at the start -->
+                    <?= csrf_field() ?>
+    
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Current Stock</label>
-                                <input type="number" class="form-control" name="current_stock" required>
+                                <label class="form-label">Item Name *</label>
+                                <input type="text" class="form-control" name="item_name" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Min Stock Level</label>
-                                <input type="number" class="form-control" name="min_stock" required>
+                                <label class="form-label">Item Code</label>
+                                <input type="text" class="form-control" name="item_code">
                             </div>
                         </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Category *</label>
+                                <select class="form-select" name="category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="meat">Meat</option>
+                                    <option value="vegetables">Vegetables</option>
+                                    <option value="grains">Grains</option>
+                                    <option value="beverages">Beverages</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Unit of Measure</label>
+                                <input type="text" class="form-control" name="unit_of_measure" placeholder="pcs, kg, liters" value="pcs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Current Stock *</label>
+                                <input type="number" class="form-control" name="current_stock" step="0.01" value="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Reorder Level *</label>
+                                <input type="number" class="form-control" name="reorder_level" step="0.01" value="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Unit Cost *</label>
+                                <input type="number" class="form-control" name="unit_cost" step="0.01" value="0.00" required>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
-                        <label class="form-label">Unit Price</label>
-                        <input type="number" class="form-control" name="unit_price" step="0.01" required>
+                        <label class="form-label">Storage Location</label>
+                        <input type="text" class="form-control" name="storage_location" placeholder="e.g., Freezer A, Shelf B">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Supplier ID</label>
+                        <input type="number" class="form-control" name="supplier_id">
                     </div>
                 </form>
             </div>
@@ -207,18 +264,18 @@
             </div>
             <div class="modal-body">
                 <form id="editQuantityForm">
-                    <input type="hidden" id="editItemId">
+                    <input type="hidden" id="editItemId" name="item_id">
                     <div class="mb-3">
                         <label class="form-label">Item Name</label>
                         <input type="text" class="form-control" id="editItemName" readonly>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Current Stock</label>
-                        <input type="number" class="form-control" id="editCurrentStock" readonly>
+                        <input type="number" class="form-control" id="editCurrentStock" step="0.01" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">New Stock Quantity</label>
-                        <input type="number" class="form-control" id="editNewStock" min="0" required>
+                        <label class="form-label">New Stock Quantity *</label>
+                        <input type="number" class="form-control" id="editNewStock" name="new_stock" step="0.01" min="0" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Adjustment Type</label>
@@ -230,11 +287,11 @@
                     </div>
                     <div class="mb-3" id="adjustmentAmountDiv" style="display: none;">
                         <label class="form-label">Adjustment Amount</label>
-                        <input type="number" class="form-control" id="adjustmentAmount" min="0" onchange="updateNewStock()">
+                        <input type="number" class="form-control" id="adjustmentAmount" step="0.01" min="0" onchange="updateNewStock()">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Reason (Optional)</label>
-                        <textarea class="form-control" id="adjustmentReason" rows="2" placeholder="Enter reason for stock adjustment..."></textarea>
+                        <textarea class="form-control" id="adjustmentReason" name="reason" rows="2" placeholder="Enter reason for stock adjustment..."></textarea>
                     </div>
                 </form>
             </div>
@@ -247,15 +304,81 @@
 </div>
 <?= $this->endSection() ?>
 
+
+
+
+
 <?= $this->section('scripts') ?>
+
 <script>
+
 let currentItemId = null;
 let currentStock = 0;
+/**
+ * Save new inventory item
+ */
+function saveItem() {
+    const form = document.getElementById('addItemForm');
+    const formData = new FormData(form);
 
+    // Validate required fields
+    const requiredFields = ['item_name', 'category', 'current_stock', 'reorder_level', 'unit_cost'];
+    for (let field of requiredFields) {
+        if (!formData.get(field)) {
+            alert('Please fill in all required fields');
+            return;
+        }
+    }
+
+    // Show loading
+    const saveBtn = $('#addItemModal .btn-primary');
+    saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+    // Send AJAX request
+    $.ajax({
+        url: '<?= base_url("restaurant/{$tenant->tenant_slug}/add-inventory-item") ?>',
+        type: 'POST',
+        data: formData,
+        dataType: 'json',
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            if (response.success) {
+                alert('Inventory item added successfully!');
+                $('#addItemModal').modal('hide');
+                form.reset();
+                location.reload();
+            } else {
+                alert('Error: ' + (response.error || 'Failed to add item'));
+            }
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON;
+            
+            // Handle array of errors
+            if (typeof response.error === 'object') {
+                let errorMsg = 'Validation errors:\n';
+                for (let field in response.error) {
+                    errorMsg += `${field}: ${response.error[field]}\n`;
+                }
+                alert(errorMsg);
+            } else {
+                alert('Error: ' + (response?.error || 'Failed to add item'));
+            }
+        },
+        complete: function() {
+            saveBtn.prop('disabled', false).html('Save Item');
+        }
+    });
+}
+
+/**
+ * Open edit quantity modal
+ */
 function editQuantity(itemId, itemName, currentStockAmount) {
     currentItemId = itemId;
     currentStock = currentStockAmount;
-    
+
     // Populate modal fields
     document.getElementById('editItemId').value = itemId;
     document.getElementById('editItemName').value = itemName;
@@ -264,225 +387,144 @@ function editQuantity(itemId, itemName, currentStockAmount) {
     document.getElementById('adjustmentType').value = 'set';
     document.getElementById('adjustmentAmount').value = '';
     document.getElementById('adjustmentReason').value = '';
-    
+
     // Reset adjustment amount div visibility
     document.getElementById('adjustmentAmountDiv').style.display = 'none';
-    
+
     // Show modal
     $('#editQuantityModal').modal('show');
 }
 
+/**
+ * Update new stock based on adjustment type
+ */
 function updateNewStock() {
     const adjustmentType = document.getElementById('adjustmentType').value;
     const adjustmentAmountDiv = document.getElementById('adjustmentAmountDiv');
     const adjustmentAmount = document.getElementById('adjustmentAmount').value;
     const newStockInput = document.getElementById('editNewStock');
-    
+
     if (adjustmentType === 'set') {
         adjustmentAmountDiv.style.display = 'none';
-        // Keep the current value in newStockInput
     } else {
         adjustmentAmountDiv.style.display = 'block';
-        
+
         if (adjustmentAmount) {
             let newStock = currentStock;
             if (adjustmentType === 'add') {
-                newStock = currentStock + parseInt(adjustmentAmount);
+                newStock = parseFloat(currentStock) + parseFloat(adjustmentAmount);
             } else if (adjustmentType === 'subtract') {
-                newStock = Math.max(0, currentStock - parseInt(adjustmentAmount));
+                newStock = Math.max(0, parseFloat(currentStock) - parseFloat(adjustmentAmount));
             }
-            newStockInput.value = newStock;
+            newStockInput.value = newStock.toFixed(3);
         }
     }
 }
 
+/**
+ * Update stock via AJAX
+ */
 function updateStock() {
+    
     const newStock = document.getElementById('editNewStock').value;
     const reason = document.getElementById('adjustmentReason').value;
-    
+
     if (!newStock || newStock < 0) {
         alert('Please enter a valid stock quantity');
         return;
     }
-    
+
     // Show loading
     const updateBtn = $('#editQuantityModal .btn-primary');
     updateBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
-    
-    // Simulate API call (replace with actual AJAX call)
-    setTimeout(() => {
-        // Update the table
-        document.getElementById('stock-' + currentItemId).textContent = newStock;
-        
-        // Update status badge
-        const statusElement = document.getElementById('status-' + currentItemId);
-        const minStock = getMinStockForItem(currentItemId);
-        
-        if (newStock == 0) {
-            statusElement.textContent = 'Out of Stock';
-            statusElement.className = 'badge bg-danger';
-        } else if (newStock <= minStock) {
-            statusElement.textContent = 'Low Stock';
-            statusElement.className = 'badge bg-warning';
-        } else {
-            statusElement.textContent = 'In Stock';
-            statusElement.className = 'badge bg-success';
-        }
-        
-        // Update summary cards
-        updateSummaryCards();
-        
-        // Hide modal
-        $('#editQuantityModal').modal('hide');
-        
-        // Show success message
-        alert('Stock updated successfully!');
-        
-        // Reset button
-        updateBtn.prop('disabled', false).html('Update Stock');
-    }, 1000);
-}
 
-function getMinStockForItem(itemId) {
-    // Get the reorder level from the table row
-    const row = document.getElementById('stock-' + itemId).closest('tr');
-    if (row) {
-        const reorderLevelCell = row.cells[3]; // 4th column (index 3) is reorder level
-        return parseInt(reorderLevelCell.textContent) || 0;
-    }
-    return 0;
-}
+    // Show console debug
+    console.log('Updating stock - ID: ' + currentItemId + ', New Stock: ' + newStock);
 
-function updateSummaryCards() {
-    // Count items by status
-    let totalItems = 0;
-    let inStock = 0;
-    let lowStock = 0;
-    let outOfStock = 0;
-    
-    // Count from table rows
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach(row => {
-        totalItems++;
-        const statusBadge = row.querySelector('.badge');
-        if (statusBadge) {
-            if (statusBadge.classList.contains('bg-success')) {
-                inStock++;
-            } else if (statusBadge.classList.contains('bg-warning')) {
-                lowStock++;
-            } else if (statusBadge.classList.contains('bg-danger')) {
-                outOfStock++;
+    // Send AJAX request
+    $.ajax({
+        url: '<?= base_url("restaurant/{$tenant->tenant_slug}/update-inventory-stock") ?>/' + currentItemId,
+        type: 'POST',
+        data: {
+            inventory_id: currentItemId,
+            new_stock: newStock,
+            reason: reason,
+            <?= csrf_token() ?>: '<?= csrf_hash() ?>'
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                // Update the table
+                document.getElementById('stock-' + currentItemId).textContent = parseFloat(newStock).toFixed(3);
+
+                // Hide modal
+                $('#editQuantityModal').modal('hide');
+
+                // Show success message
+                alert('Stock updated successfully!');
+
+                // Refresh to update summary
+                location.reload();
+            } else {
+                alert('Error: ' + (response.error || 'Failed to update stock'));
             }
+        },
+        error: function(xhr) {
+            console.log('Error response:', xhr);
+            const response = xhr.responseJSON;
+            console.log('Full response:', response);
+            
+            // Handle validation errors
+            if (typeof response.error === 'object') {
+                let errorMsg = 'Validation errors:\n';
+                for (let field in response.error) {
+                    errorMsg += `${field}: ${response.error[field]}\n`;
+                    console.log(`${field}: ${response.error[field]}`);
+                }
+                alert(errorMsg);
+            } else {
+                alert('Error: ' + (response?.error || 'Failed to update stock'));
+            }
+        },
+        complete: function() {
+            updateBtn.prop('disabled', false).html('Update Stock');
         }
     });
-    
-    // Update summary cards (if they exist)
-    const totalElement = document.querySelector('.card.bg-primary h2');
-    const inStockElement = document.querySelector('.card.bg-success h2');
-    const lowStockElement = document.querySelector('.card.bg-warning h2');
-    const outOfStockElement = document.querySelector('.card.bg-danger h2');
-    
-    if (totalElement) totalElement.textContent = totalItems;
-    if (inStockElement) inStockElement.textContent = inStock;
-    if (lowStockElement) lowStockElement.textContent = lowStock;
-    if (outOfStockElement) outOfStockElement.textContent = outOfStock;
 }
 
+/**
+ * Delete inventory item
+ */
 function deleteItem(itemId) {
-    if (confirm('Are you sure you want to delete this item?')) {
-        // Find and remove the table row
-        const stockElement = document.getElementById('stock-' + itemId);
-        if (stockElement) {
-            const row = stockElement.closest('tr');
-            if (row) {
-                row.remove();
-                
-                // Update summary cards
-                updateSummaryCards();
-                
-                alert('Item deleted successfully!');
-            }
-        }
-        // In real implementation, you would make an AJAX call to delete the item from database
-    }
-}
-
-function saveItem() {
-    const form = document.getElementById('addItemForm');
-    const formData = new FormData(form);
-    
-    // Get form values
-    const name = formData.get('name');
-    const category = formData.get('category');
-    const currentStock = formData.get('current_stock');
-    const minStock = formData.get('min_stock');
-    const unitPrice = formData.get('unit_price');
-    
-    // Validate form
-    if (!name || !category || !currentStock || !minStock || !unitPrice) {
-        alert('Please fill in all required fields');
+    if (!confirm('Are you sure you want to delete this item?')) {
         return;
     }
-    
-    // Show loading
-    const saveBtn = $('#addItemModal .btn-primary');
-    saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-    
-    // Simulate API call (replace with actual AJAX call)
-    setTimeout(() => {
-        // Generate new item ID (in real app, this would come from server)
-        const newItemId = Date.now(); // Simple ID generation
-        
-        // Determine status based on stock levels
-        let status = 'In Stock';
-        let statusClass = 'bg-success';
-        if (currentStock == 0) {
-            status = 'Out of Stock';
-            statusClass = 'bg-danger';
-        } else if (parseInt(currentStock) <= parseInt(minStock)) {
-            status = 'Low Stock';
-            statusClass = 'bg-warning';
+
+    $.ajax({
+        url: '<?= base_url("restaurant/{$tenant->tenant_slug}/delete-inventory-item/") ?>' + itemId,
+        type: 'POST',
+        data: {
+            <?= csrf_token() ?>: '<?= csrf_hash() ?>'
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                alert('Item deleted successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + (response.error || 'Failed to delete item'));
+            }
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON;
+            alert('Error: ' + (response?.error || 'Failed to delete item'));
         }
-        
-        // Create new table row
-        const newRow = `
-            <tr>
-                <td>${name}</td>
-                <td>${category}</td>
-                <td id="stock-${newItemId}">${currentStock}</td>
-                <td>${minStock}</td>
-                <td>₱${parseFloat(unitPrice).toFixed(2)}</td>
-                <td><span class="badge ${statusClass}" id="status-${newItemId}">${status}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="editQuantity(${newItemId}, '${name}', ${currentStock})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteItem(${newItemId})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-        
-        // Add row to table
-        const tbody = document.querySelector('tbody');
-        tbody.insertAdjacentHTML('beforeend', newRow);
-        
-        // Update summary cards
-        updateSummaryCards();
-        
-        // Hide modal and reset form
-        $('#addItemModal').modal('hide');
-        form.reset();
-        
-        // Show success message
-        alert('Item added successfully!');
-        
-        // Reset button
-        saveBtn.prop('disabled', false).html('Save Item');
-    }, 1000);
+    });
 }
 
+/**
+ * Refresh inventory page
+ */
 function refreshInventory() {
     location.reload();
 }

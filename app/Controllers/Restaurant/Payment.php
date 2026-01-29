@@ -3,7 +3,9 @@
 namespace App\Controllers\Restaurant;
 
 use App\Controllers\BaseRestaurantController;
-
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use Psr\Log\LoggerInterface;
 class Payment extends BaseRestaurantController
 {
     protected $orderModel;
@@ -44,9 +46,19 @@ class Payment extends BaseRestaurantController
         return $this->response->setBody($html);
     }
     
-    public function __construct()
+    // public function __construct()
+    // {
+    //     parent::__construct();
+    //     $this->orderModel = new \App\Models\Tenant\OrderModel();
+    //     $this->orderModel->setDB($this->tenantDb);
+    // }
+
+    // Remove the constructor entirely, or use this:
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
-        parent::__construct();
+        parent::initController($request, $response, $logger);
+        
+        // Now you can use $this->tenantDb
         $this->orderModel = new \App\Models\Tenant\OrderModel();
         $this->orderModel->setDB($this->tenantDb);
     }
@@ -57,112 +69,55 @@ class Payment extends BaseRestaurantController
     public function index($orderId)
     {
         try {
-            // URL에서 직접 orderId 추출 (라우트 매개변수 문제 해결)
-            if (!$orderId || $orderId === $this->tenantId) {
-                $uri = $this->request->getUri();
-                $segments = $uri->getSegments();
+            // // URL에서 직접 orderId 추출 (라우트 매개변수 문제 해결)
+            // if (!$orderId || $orderId === $this->tenantId) {
+            //     $uri = $this->request->getUri();
+            //     $segments = $uri->getSegments();
                 
-                // URL: /restaurant/jollibee/payment/5
-                // segments: ['restaurant', 'jollibee', 'payment', '5']
-                if (count($segments) >= 4 && $segments[2] === 'payment') {
-                    $orderId = $segments[3];
+            //     // URL: /restaurant/jollibee/payment/5
+            //     // segments: ['restaurant', 'jollibee', 'payment', '5']
+            //     if (count($segments) >= 4 && $segments[2] === 'payment') {
+            //         $orderId = $segments[3];
+            //     }
+            // }
+            $order = $this->tenantDb->table('orders as o')
+                                    ->select('o.*, o.vat_amount,rt.table_number')
+                                    ->join('restaurant_tables as rt', 'o.table_id = rt.id', 'left')
+                                    ->where('o.id', $orderId)
+                                    ->get()
+                                    ->getRow();
+                                    
+                if (!$order) {
+                throw new \Exception('Order not found');
                 }
-            }
-            
-            // 임시 하드코딩된 주문 데이터
-            $orders = [
-                1 => (object) [
-                    'id' => 1,
-                    'order_number' => 'ORD20241201001',
-                    'table_id' => 1,
-                    'table_numbers' => '1',
-                    'customer_name' => 'Test Customer',
-                    'status' => 'pending',
-                    'total_amount' => 150.00,
-                    'ordered_at' => '2025-10-18 10:13:56',
-                    'items' => [
-                        (object) [
-                            'id' => 1,
-                            'item_name' => 'Chicken Joy (2 pcs)',
-                            'quantity' => 1,
-                            'unit_price' => 100.00,
-                            'total_price' => 100.00
-                        ],
-                        (object) [
-                            'id' => 2,
-                            'item_name' => 'Rice',
-                            'quantity' => 1,
-                            'unit_price' => 50.00,
-                            'total_price' => 50.00
-                        ]
-                    ]
-                ],
-                4 => (object) [
-                    'id' => 4,
-                    'order_number' => 'ORD20241201003',
-                    'table_id' => 2,
-                    'table_numbers' => '2',
-                    'customer_name' => 'Test Customer',
-                    'status' => 'pending',
-                    'total_amount' => 150.00,
-                    'ordered_at' => '2025-10-19 03:46:30',
-                    'items' => [
-                        (object) [
-                            'id' => 3,
-                            'item_name' => 'Jolly Spaghetti',
-                            'quantity' => 1,
-                            'unit_price' => 80.00,
-                            'total_price' => 80.00
-                        ],
-                        (object) [
-                            'id' => 4,
-                            'item_name' => 'Coke',
-                            'quantity' => 1,
-                            'unit_price' => 70.00,
-                            'total_price' => 70.00
-                        ]
-                    ]
-                ],
-                5 => (object) [
-                    'id' => 5,
-                    'order_number' => 'ORD20241201004',
-                    'table_id' => 3,
-                    'table_numbers' => '3',
-                    'customer_name' => 'New Customer',
-                    'status' => 'preparing',
-                    'total_amount' => 200.00,
-                    'ordered_at' => '2025-10-19 03:48:43',
-                    'items' => [
-                        (object) [
-                            'id' => 5,
-                            'item_name' => 'Yum Burger',
-                            'quantity' => 2,
-                            'unit_price' => 100.00,
-                            'total_price' => 200.00
-                        ]
-                    ]
-                ]
-            ];
-            
-            if (!isset($orders[$orderId])) {
-                return redirect()->to(base_url("restaurant/{$this->tenantId}/pos"))
-                    ->with('error', 'Order not found');
-            }
-            
-            $order = $orders[$orderId];
-            
+                
+                                     
+            // FIX: Ensure these properties exist so the view doesn't crash
+            $order->vat_amount = $order->vat_amount ?? 0;
+            $order->total_amount = $order->total_amount ?? 0;
+            $order->order_number = $order->order_number ?? 'N/A';
+            // Get Order Items
+            $order->items = $this->tenantDb->table('order_items')
+                                    ->where('order_id', $orderId)
+                                    ->get()
+                                    ->getResult();
+            $order->items = $order->items ?? [];
             $data = [
                 'title' => 'Payment - ' . $order->order_number,
                 'page_title' => 'Payment',
                 'tenant' => (object) [
                     'slug' => $this->tenantId,
                     'tenant_slug' => $this->tenantId,
-                    'restaurant_name' => $this->tenantConfig->restaurant_name ?? 'Jollibee'
+                    'restaurant_name' => $this->tenantConfig->restaurant_name ?? 'Jollibee',
+                    'theme_color' => $this->tenantConfig->theme_color,  // ← ADD THIS
                 ],
                 'tenant_slug' => $this->tenantId,
                 'current_user' => $this->currentUser,
                 'order' => $order,
+                'items' => $order->items, //Added this
                 'base_url' => base_url()
+
+                
             ];
             
             return view('restaurant/payment', $data);
@@ -188,23 +143,28 @@ class Payment extends BaseRestaurantController
             if (!$order) {
                 return redirect()->to(base_url("restaurant/{$this->tenantId}/pos"))
                     ->with('error', 'Order not found');
-            }
-            
+            }            
             // 주문 아이템 가져오기
-            $order->items = $this->tenantDb->table('order_items oi')
-                                          ->select('oi.*, mi.name as item_name')
-                                          ->join('menu_items mi', 'oi.menu_item_id = mi.id', 'left')
-                                          ->where('oi.order_id', $orderId)
-                                          ->get()
-                                          ->getResult();
-            
+            // No join needed - item_name is already in order_items
+            $order->items = $this->tenantDb->table('order_items')
+                            ->where('order_id', $orderId)
+                            ->get()
+                            ->getResult();
+            // Set defaults
+            // $order->items = $order->items ?? [];
+            // $order->vat_amount = $order->vat_amount ?? 0;
+            // $order->service_charge = $order->service_charge ?? 0;
+            // $order->cashier_name = $order->cashier_name ?? 'System';
+
             $data = [
                 'order' => $order,
                 'tenant' => (object) [
-                    'restaurant_name' => $this->tenantConfig->restaurant_name ?? 'Jollibee',
+                    'restaurant_name' => $this->tenantConfig->restaurant_name ?? 'Restaurant',
                     'address' => $this->tenantConfig->address ?? '',
-                    'phone' => $this->tenantConfig->phone ?? ''
-                ]
+                    'phone' => $this->tenantConfig->phone ?? '',
+                    // 'theme_color' => $this->tenantConfig->theme_color ?? '#667eea'
+                ],
+                'tenant_slug' => $this->tenantId
             ];
             
             return view('restaurant/receipt', $data);
@@ -227,8 +187,13 @@ class Payment extends BaseRestaurantController
             'order_id' => 'required|integer',
             'payment_method' => 'required|in_list[cash,card,gcash,maya,mixed]',
             'amount_received' => 'required|decimal',
-            'total_amount' => 'required|decimal'
+            'total_amount' => 'required|decimal',
+            // Added this 
+            'discount_type' => 'permit_empty|string',
+            'discount_amount' => 'permit_empty|decimal'
         ];
+        $discountType   = $this->request->getPost('discount_type');
+        $discountAmount = $this->request->getPost('discount_amount') ?? 0;
 
         if (!$this->validate($rules)) {
             return $this->jsonResponse(['error' => $this->validator->getErrors()], 400);
@@ -243,6 +208,8 @@ class Payment extends BaseRestaurantController
         try {
             // 주문 존재 확인
             $order = $this->orderModel->find($orderId);
+
+            
             if (!$order) {
                 return $this->jsonResponse(['error' => 'Order not found'], 404);
             }
@@ -256,8 +223,12 @@ class Payment extends BaseRestaurantController
                 'amount_received' => $amountReceived,
                 'change_amount' => $changeAmount,
                 'payment_status' => 'paid',
-                'status' => 'paid',
-                'paid_at' => date('Y-m-d H:i:s')
+                'status' => 'completed',
+                'completed_at' => date('Y-m-d H:i:s'),
+                'discount_type'   => $discountType,
+                'discount_amount' => $discountAmount
+                
+                
             ];
             
             $this->orderModel->update($orderId, $updateData);
@@ -419,9 +390,9 @@ class Payment extends BaseRestaurantController
     /**
      * Print receipt
      */
-    private function printReceipt(int $orderId, int $paymentId): void
-    {
-        // Receipt printing implementation
-        log_message('info', "Receipt printed for Order ID: {$orderId}, Payment ID: {$paymentId}");
-    }
+    // private function printReceipt(int $orderId, int $paymentId): void
+    // {
+    //     // Receipt printing implementation
+    //     log_message('info', "Receipt printed for Order ID: {$orderId}, Payment ID: {$paymentId}");
+    // }
 }

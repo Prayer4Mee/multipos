@@ -67,69 +67,48 @@ class OrderApi extends Controller
     
     public function orderDetails($orderId = null)
     {
-        // URL에서 직접 orderId 추출
-        if (!$orderId || $orderId === 'jollibee') {
-            $uri = $this->request->getUri();
-            $segments = $uri->getSegments();
-            
-            // URL: /restaurant/jollibee/order-details/4
-            // segments: ['restaurant', 'jollibee', 'order-details', '4']
-            if (count($segments) >= 4 && $segments[2] === 'order-details') {
-                $orderId = $segments[3];
-            }
-        }
-        
-        // orderId가 여전히 tenant ID인 경우 처리
-        if ($orderId === $this->tenantId) {
-            $uri = $this->request->getUri();
-            $segments = $uri->getSegments();
-            if (count($segments) >= 4) {
-                $orderId = $segments[3];
-            }
-        }
-        
         try {
-            // 임시 하드코딩된 데이터 (실제 DB 연결 문제 해결 전까지)
-            // 1. Fetch the order
-            $order = $this->db->table('orders as o')
-                            ->select('o.*, rt.table_number')
-                            ->join('restaurant_tables as rt', 'rt.id = o.table_id', 'left')
-                            ->where('o.id', $orderId)
-                            ->where('o.tenant_id', $this->tenantId)
-                            ->get()
-                            ->getRow();
+            // If orderId is missing, try to extract from URI
+            if (!$orderId) {
+                $uri = $this->request->getUri();
+                $segments = $uri->getSegments();
+                if (count($segments) >= 4 && $segments[2] === 'order-details') {
+                    $orderId = $segments[3];
+                }
+            }
 
-            // 2. Validate, if no order found, return error
+            // Fetch the order from tenant database
+            $order = $this->tenantDb->table('orders as o')
+                ->select('o.*, rt.table_number')
+                ->join('restaurant_tables as rt', 'o.table_id = rt.id', 'left')
+                ->where('o.id', $orderId)
+                ->where('o.tenant_id', $this->tenantId)
+                ->get()
+                ->getRow();
+
             if (!$order) {
                 return $this->response->setJSON([
                     'success' => false,
-                    'error' => 'Order not found',
-                    'debug' => [
-                        'orderId' => $orderId,
-                        'tenantId' => $this->tenantId
-                    ]
+                    'error' => 'Order not found'
                 ])->setStatusCode(404);
             }
 
-            // 3. Fetch the items for this specific order
-            $items = $this->db->table('order_items')
-                            ->where('order_id', $orderId)
-                            ->get()
-                            ->getResult();
-            
-            // 4. Attach items to the order object
-            $order->items = $items;
-            
-            // 5. If succesful, return the order details
+            // Fetch order items with menu item names
+            $order->items = $this->tenantDb->table('order_items as oi')
+                ->select('oi.*, mi.name as menu_item_name')
+                ->join('menu_items as mi', 'oi.menu_item_id = mi.id', 'left')
+                ->where('oi.order_id', $orderId)
+                ->get()
+                ->getResult();
+
             return $this->response->setJSON([
                 'success' => true,
                 'order' => $order
             ]);
-        // 6. Krazy catch block
         } catch (\Exception $e) {
             return $this->response->setJSON([
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => 'Failed to load order details: ' . $e->getMessage()
             ])->setStatusCode(500);
         }
     }

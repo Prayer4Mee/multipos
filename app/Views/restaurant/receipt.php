@@ -99,8 +99,8 @@
     <div class="receipt">
         <div class="header">
             <div class="restaurant-name"><?= $tenant->restaurant_name ?></div>
-            <div class="address"><?= $tenant->address ?></div>
-            <div class="address">Tel: <?= $tenant->phone ?></div>
+            <div class="address"><?= isset($tenant->address) ? $tenant->address : '' ?></div>
+            <div class="address">Tel: <?= isset($tenant->phone) ? $tenant->phone : '' ?></div>
         </div>
 
         <div class="order-info">
@@ -114,7 +114,7 @@
             </div>
             <div>
                 <span>Table:</span>
-                <span><?= $order->table_numbers ?? 'N/A' ?></span>
+                <span><?= $order->table_number ?? 'N/A' ?></span>
             </div>
             <div>
                 <span>Cashier:</span>
@@ -123,15 +123,23 @@
         </div>
 
         <div class="items">
-            <?php foreach ($order->items as $item): ?>
-            <div class="item">
-                <div class="item-name"><?= esc($item->item_name) ?></div>
-                <div class="item-details">
-                    <span><?= $item->quantity ?> x ₱<?= number_format($item->unit_price, 2) ?></span>
-                    <span>₱<?= number_format($item->total_price, 2) ?></span>
+            <?php if(isset($order->items) && is_array($order->items) && count($order->items) > 0): ?>
+            <!-- isset($order->items)Checks if the property exists, prevents the Undefined Property
+             && is_array($order->items)Checks if it's an array (or can be treated like one), Prevents errors if $order->items is somehow null or a string
+             && count($order->items) > 0 Checks if there are actually items in the array, makes sure the array is not empty -->
+                <?php foreach ($order->items as $item): ?>
+                <div class="item">
+                    <div class="item-name"><?= esc($item->item_name) ?></div>
+                    <div class="item-details">
+                        <span><?= $item->quantity ?> x ₱<?= number_format($item->unit_price, 2) ?></span>
+                        <span>₱<?= number_format($item->total_price, 2) ?></span>
+                    </div>
                 </div>
-            </div>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+                <!-- Added this if no items found -->
+            <?php else: ?>
+                <div class="item">No items found</div>
+            <?php endif; ?>
         </div>
 
         <div class="totals">
@@ -162,16 +170,26 @@
                 <span>Payment Method:</span>
                 <span><?= ucfirst($order->payment_method) ?></span>
             </div>
-            <?php if ($order->payment_method === 'cash'): ?>
+            <!-- P-A-Y-M-E-N-T Methods, hope it works -->
             <div>
                 <span>Amount Received:</span>
-                <span>₱<?= number_format($order->amount_received, 2) ?></span>
+                <span>₱<?= number_format($order->amount_received ?? 0, 2) ?></span>
             </div>
+            <!-- PHASE 1: Change (works only for cash) -->
+             <!-- Added discount if applied -->
+            <?php if (isset($order->discount_amount) && $order->discount_amount > 0): ?>
             <div>
-                <span>Change:</span>
-                <span>₱<?= number_format($order->change_amount, 2) ?></span>
+                <span>Discount:</span>
+                <span>-₱<?= number_format($order->discount_amount, 2) ?></span>
             </div>
             <?php endif; ?>
+            <?php if (isset($order->payment_method) && $order->payment_method === 'cash'): ?>
+            <div>
+                <span><strong>CHANGE:</strong></span>
+                <span>₱<?= number_format($order->change_amount ?? 0, 2) ?></span>
+            </div>
+            <?php endif; ?>
+            
         </div>
 
         <div class="footer">

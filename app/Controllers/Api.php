@@ -96,6 +96,7 @@ class Api extends BaseRestaurantController
             $items = json_decode($this->request->getPost('items'), true);
             foreach ($items as $item) {
                 // Add item processing logic here
+                
             }
 
             $this->tenantDb->transComplete();

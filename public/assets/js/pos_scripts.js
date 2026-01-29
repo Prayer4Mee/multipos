@@ -1,143 +1,3 @@
-<?= $this->extend('layouts/main') ?>
-
-<?= $this->section('head') ?>
-<style>
-    .order-item:hover {
-        background-color: #f8f9fa;
-    }
-    .order-item.selected {
-        background-color: #e3f2fd;
-        border-left: 4px solid #2196f3;
-    }
-</style>
-<?= $this->endSection() ?>
-
-<?= $this->section('content') ?>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="fas fa-cash-register"></i> POS Terminal</h1>
-                <div>
-                    <button class="btn btn-primary me-2" onclick="location.reload()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                    <!-- NEW: Print Paid Receipts Button -->
-                    <button class="btn btn-info me-2" onclick="openPrintPaidReceiptsModal()">
-                        <i class="fas fa-print"></i> Print Paid Receipts
-                    </button>
-                    <a href="<?= base_url("restaurant/{$tenant->tenant_slug}/new-order") ?>" class="btn btn-success">
-                <i class="fas fa-plus"></i> New Order
-                    </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    <div class="row">
-        <!-- Left Side: Current Orders -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Current Orders</h5>
-                    <button class="btn btn-sm btn-outline-primary" onclick="refreshOrders()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
-                <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
-                    <div id="currentOrdersList">
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
-                            <p>Loading orders...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-        <!-- Right Side: Order Details & Payment -->
-        <div class="col-md-6">
-                    <!-- Order Details -->
-            <div id="orderDetailsSection">
-                        <div class="card">
-                            <div class="card-header">
-                        <h5 class="card-title mb-0">Order Details</h5>
-                            </div>
-                    <div class="card-body text-center text-muted">
-                        <i class="fas fa-hand-pointer fa-3x mb-3"></i>
-                        <p>Select an order from the list to view details and process payment</p>
-                                    </div>
-                                    </div>
-                                    </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-<!-- Print Paid Receipts Modal -->
-<div class="modal fade" id="printPaidReceiptsModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-print"></i> Print Paid Receipts
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <!-- Left: Paid Orders List -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">Paid Orders</h6>
-                            </div>
-                            <div class="card-body p-0">
-                                <!-- Search Box -->
-                                <div class="p-3 border-bottom">
-                                    <input type="text" 
-                                           id="paidOrdersSearch" 
-                                           class="form-control form-control-sm" 
-                                           placeholder="Search order number..."
-                                           onkeyup="searchPaidOrders()">
-                                </div>
-                                
-                                <!-- Orders List -->
-                                <div id="paidOrdersList" style="max-height: 500px; overflow-y: auto;">
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
-                                        <p>Loading paid orders...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Order Details -->
-                    <div class="col-md-6">
-                        <div id="paidOrderDetailsSection">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">Order Details</h6>
-                                </div>
-                                <div class="card-body text-center text-muted">
-                                    <i class="fas fa-hand-pointer fa-3x mb-3"></i>
-                                    <p>Select an order to view details</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-<?= $this->endSection() ?>
-
-<?= $this->section('scripts') ?>
-<script>
 // POS Terminal JavaScript Functions
 let currentOrder = [];
 let orderTotal = 0;
@@ -145,7 +5,6 @@ let newOrderItems = [];
 let newOrderTotal = 0;
 let selectedOrderId = null;
 let currentOrders = [];
-
 
 $(document).ready(function() {
     console.log('Document ready, initializing POS...');
@@ -206,18 +65,7 @@ function loadCurrentOrders() {
         }
     });
 }
-// Helper function to escape HTML and prevent XSS
-function escapeHtml(text) {
-    if (!text) return '';
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, m => map[m]);
-}
+
 function renderCurrentOrders(orders) {
     console.log('Rendering orders:', orders);
     const container = $('#currentOrdersList');
@@ -633,8 +481,8 @@ function renderPaidOrders(orders) {
              style="cursor: pointer;">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="mb-1">#${escapeHtml(order.order_number)}</h6>
-                    <p class="mb-1 text-muted small">Table ${escapeHtml(order.table_number)}</p>
+                    <h6 class="mb-1">#${order.order_number}</h6>
+                    <p class="mb-1 text-muted small">Table ${order.table_number || 'N/A'}</p>
                     <p class="mb-0 text-muted small">${order.items ? order.items.length : 0} items</p>
                 </div>
                 <div class="text-end">
@@ -683,14 +531,14 @@ function displayPaidOrderDetails(order) {
     const detailsHtml = `
         <div class="card">
             <div class="card-header bg-success text-white">
-                <h6 class="mb-0">Order Details - #${escapeHtml(order.order_number)}</h6>
+                <h6 class="mb-0">Order Details - #${order.order_number}</h6>
             </div>
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-12">
-                        <p><strong>Table:</strong> ${order.table_number ? 'Table ' + escapeHtml(order.table_number) : 'N/A'}</p>
-                        <p><strong>Customer:</strong> ${escapeHtml(order.customer_name || 'Walk-in')}</p>
-                        <p><strong>Order Time:</strong> ${escapeHtml(formatDateTime(order.ordered_at))}</p>
+                        <p><strong>Table:</strong> ${order.table_number ? 'Table ' + order.table_number : 'N/A'}</p>
+                        <p><strong>Customer:</strong> ${order.customer_name || 'Walk-in'}</p>
+                        <p><strong>Order Time:</strong> ${formatDateTime(order.ordered_at)}</p>
                         <p><strong>Items:</strong> ${order.items ? order.items.length : 0}</p>
                     </div>
                 </div>
@@ -711,7 +559,7 @@ function displayPaidOrderDetails(order) {
                         <tbody>
                             ${order.items && order.items.length > 0 ? order.items.map(item => `
                                 <tr>
-                                    <td>${escapeHtml(item.menu_item_name || item.item_name)}</td>
+                                    <td>${item.menu_item_name || item.item_name}</td>
                                     <td>${item.quantity}</td>
                                     <td class="text-end">₱${parseFloat(item.unit_price).toFixed(2)}</td>
                                     <td class="text-end">₱${parseFloat(item.total_price || (item.unit_price * item.quantity)).toFixed(2)}</td>
@@ -810,12 +658,12 @@ function renderPaidOrdersWithMatch(orders) {
             <div class="d-flex justify-content-between align-items-center">
                 <div class="flex-grow-1">
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <h6 class="mb-0">#${escapeHtml(order.order_number)}</h6>
-                        ${order.searchMatch ? `<small class="badge bg-warning text-dark">${escapeHtml(order.searchMatch.join(', '))}</small>` : ''}
+                        <h6 class="mb-0">#${order.order_number}</h6>
+                        ${order.searchMatch ? `<small class="badge bg-warning text-dark">${order.searchMatch.join(', ')}</small>` : ''}
                     </div>
                     <p class="mb-1 text-muted small">
-                        <i class="fas fa-user"></i> ${escapeHtml(order.customer_name || 'Walk-in')} 
-                        ${order.table_number ? `| <i class="fas fa-chair"></i> Table ${escapeHtml(order.table_number)}` : ''}
+                        <i class="fas fa-user"></i> ${order.customer_name || 'Walk-in'} 
+                        ${order.table_number ? `| <i class="fas fa-chair"></i> Table ${order.table_number}` : ''}
                     </p>
                     <p class="mb-0 text-muted small"><i class="fas fa-list"></i> ${order.items ? order.items.length : 0} items</p>
                 </div>
@@ -829,6 +677,3 @@ function renderPaidOrdersWithMatch(orders) {
     
     container.html(html);
 }
-
-</script>
-<?= $this->endSection() ?>

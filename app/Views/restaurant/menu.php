@@ -33,18 +33,30 @@
         <?php if (!empty($menu_categories)): ?>
             <?php foreach ($menu_categories as $index => $category): ?>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link <?= $index === 0 ? 'active' : '' ?>" 
-                            id="<?= $category->name ?>-tab" 
+                    <!-- Added this: data-color -->
+                    <button 
+                            class="nav-link <?= $index === 0 ? 'active' : '' ?>" 
+                            data-color="<?= esc($category->color_code) ?>"
+                            id="category-tab-<?= $category->id ?>"
                             data-bs-toggle="tab" 
-                            data-bs-target="#<?= $category->name ?>" 
-                            type="button" role="tab">
-                        <i class="fas fa-utensils"></i> <?= esc($category->name) ?>
+                            data-bs-target="#category-<?= $category->id ?>" 
+                            type="button" 
+                            role="tab"
+                            style="background-color: <?= $category->color_code ?>; color: white; border-color: <?= $category->color_code ?>">
+                            <!-- Added some style so color_code would have some use -->
+                            <i class="fas fa-utensils"></i> 
+                            <?= esc($category->name) ?>
                     </button>
                 </li>
             <?php endforeach; ?>
         <?php else: ?>
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="no-categories-tab" data-bs-toggle="tab" data-bs-target="#no-categories" type="button" role="tab">
+                <button class="nav-link active" 
+                id="no-categories-tab" 
+                data-bs-toggle="tab" 
+                data-bs-target="#no-categories" 
+                type="button" 
+                role="tab">
                     <i class="fas fa-info-circle"></i> No Categories
                 </button>
             </li>
@@ -56,7 +68,10 @@
         <?php if (!empty($menu_categories)): ?>
             <?php foreach ($menu_categories as $index => $category): ?>
                 <div class="tab-pane fade <?= $index === 0 ? 'show active' : '' ?>" 
-                     id="<?= $category->name ?>" role="tabpanel">
+                    id="category-<?= $category->id ?>" 
+                    role="tabpanel"
+                    aria-labelledby="category-tab-<?= $category->id ?>">
+                    
                     <div class="row">
                         <?php 
                         $categoryItems = array_filter($menu_items, function($item) use ($category) {
@@ -74,13 +89,19 @@
                                                     <?= $item->is_available ? 'Available' : 'Unavailable' ?>
                                                 </span>
                                             </div>
+
+
                                             <p class="card-text text-muted small"><?= esc($item->description) ?></p>
+
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <span class="h6 text-primary mb-0">₱<?= number_format($item->price, 2) ?></span>
+                                                <span class="h6 text-primary mb-0">₱
+                                                    <?= number_format($item->price, 2) ?>
+                                                </span>
                                                 <div class="btn-group btn-group-sm">
                                                     <button class="btn btn-outline-primary" onclick="editMenuItem(<?= $item->id ?>)">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
+                                                    <!-- Danger! This is delete. Advise: use disable instead -->
                                                     <button class="btn btn-outline-danger" onclick="deleteMenuItem(<?= $item->id ?>)">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
@@ -109,6 +130,46 @@
         <?php endif; ?>
     </div>
 </div>
+
+<!-- Edit Menu Item Modal (reuse your Add Item modal) -->
+<div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="editItemForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Menu Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="item_id" id="editItemId">
+          <div class="mb-3">
+            <label>Name</label>
+            <input type="text" name="name" id="editItemName" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label>Description</label>
+            <textarea name="description" id="editItemDescription" class="form-control"></textarea>
+          </div>
+          <div class="mb-3">
+            <label>Price</label>
+            <input type="number" step="0.01" name="price" id="editItemPrice" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label>Category</label>
+            <select name="category_id" id="editItemCategory" class="form-select">
+              <!-- dynamically populated -->
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveEditedMenuItem()">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 
 <!-- Add Menu Category Modal -->
 <div class="modal fade" id="addCategoryModal" tabindex="-1">
@@ -234,15 +295,70 @@ $(document).ready(function() {
 
 function editMenuItem(itemId) {
     // TODO: Implement edit functionality
-    alert('Edit menu item: ' + itemId);
+    // alert('Edit menu item: ' + itemId);
+    // 1. Fetch menu item data via Ajax
+    $.ajax({
+        url: '<?= base_url("restaurant/{$tenant_slug}/get-menu-item") ?>/' +itemId,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                const item = response.item;
+                $('#editItemId').val(item.id);
+                $('#editItemName').val(item.name);
+                $('#editItemDescription').val(item.description);
+                $('#editItemPrice').val(item.price);
+                
+                // Populate category select
+                $('#editItemCategory').html(''); // Clear first
+                <?php foreach ($menu_categories as $cat):  ?>
+                    $('#editItemCategory').append(
+                        `<option value="<?= $cat->id ?>" ${item.category_id == <?= $cat->id ?> ? 'selected' : ''}><?= esc($cat->name) ?></option>`
+                    );
+                <?php endforeach ?>
+
+                // Show Modal
+                $('#editItemModal').modal('show');
+            } else {
+                alert('Failed to fetch item data');
+            }
+        },
+        error: function() {
+            alert('Error fetching menu item');
+        }
+    });
 }
 
 function deleteMenuItem(itemId) {
-    if (confirm('Are you sure you want to delete this menu item?')) {
+    if (!confirm('Are you sure you want to delete this menu item?')) {
         // TODO: Implement delete functionality
-        alert('Menu item deleted: ' + itemId);
+        // alert('Menu item deleted: ' + itemId);
+        return; // They Cancelled, like how I like my friends
     }
+
+    $.ajax({
+        url: '<?= base_url("restaurant/{$tenant_slug}/delete-menu-item") ?>/' +itemId,
+        type: 'POST',
+        data: {
+            item_id: itemId,
+            <?= csrf_token() ?>: '<?= csrf_hash() ?>'
+        },
+        dataType: 'json',
+        success: function(response){
+            if (response.success){
+            alert('Menu Item deleted successfully!');
+            // Optional: remove the card from DOM without reloading
+            $('#menuTabsContent').find(`[onclick="editMenuItem(${itemId})"]`).closest('.col-md-6, .col-lg-4').remove();
+            } else {
+                alert('Failed to delete item: ' + (response.error || 'Unknown error'));
+            }
+        },
+        error: function() {
+            alert('Error deleting menu item');
+        }
+    });
 }
+
 
 function saveMenuCategory() {
     const form = document.getElementById('addCategoryForm');
@@ -262,7 +378,7 @@ function saveMenuCategory() {
     
     // Send AJAX request
     $.ajax({
-        url: '<?= base_url("restaurant/{$tenant->tenant_slug}/add-menu-category") ?>',
+        url: '<?= base_url("restaurant/{$tenant_slug}/add-menu-category") ?>',
         type: 'POST',
         data: data,
         dataType: 'json',
@@ -306,7 +422,7 @@ function saveMenuItem() {
     
     // Send AJAX request
     $.ajax({
-        url: '<?= base_url("restaurant/{$tenant->tenant_slug}/add-menu-item") ?>',
+        url: '<?= base_url("restaurant/{$tenant_slug}/add-menu-item") ?>',
         type: 'POST',
         data: data,
         dataType: 'json',
@@ -328,6 +444,47 @@ function saveMenuItem() {
         }
     });
 }
+
+// Save Updated Item via Ajax
+function saveEditedMenuItem() {
+    const form = document.getElementById('editItemForm');
+    const formData = new FormData(form);
+    
+    const data = {
+        item_id: formData.get('item_id'),
+        name: formData.get('name'),
+        description: formData.get('description'),
+        price: formData.get('price'),
+        category_id: formData.get('category_id'),
+        <?= csrf_token() ?>: '<?= csrf_hash() ?>'
+    };
+
+    const saveBtn = $('#editItemModal .btn-primary');
+    saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+    $.ajax({
+        url: '<?= base_url("restaurant/{$tenant_slug}/update-menu-item") ?>',
+        type: 'POST',
+        data: data,
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                $('#editItemModal').modal('hide');
+                alert('Menu item updated successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + (response.error || 'Failed to update item'));
+            }
+        },
+        error: function() {
+            alert('Error updating menu item');
+        },
+        complete: function() {
+            saveBtn.prop('disabled', false).html('Save Changes');
+        }
+    });
+}
+
 
 function refreshMenu() {
     location.reload();

@@ -1,0 +1,14 @@
+[33m89715f9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbackup-current[m[33m, [m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m HEAD@{0}: checkout: moving from main to backup-current
+[33m89715f9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbackup-current[m[33m, [m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m HEAD@{1}: reset: moving to 89715f9
+[33m89715f9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbackup-current[m[33m, [m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m HEAD@{2}: reset: moving to 89715f9
+[33m89715f9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbackup-current[m[33m, [m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m HEAD@{3}: reset: moving to 89715f9
+[33md60ea3f[m HEAD@{4}: Branch: renamed refs/heads/main to refs/heads/main
+[33md60ea3f[m HEAD@{6}: commit: Initial commit for multipos
+[33md1e0775[m HEAD@{7}: Branch: renamed refs/heads/main to refs/heads/main
+[33md1e0775[m HEAD@{9}: Branch: renamed refs/heads/main to refs/heads/main
+[33md1e0775[m HEAD@{11}: Branch: renamed refs/heads/main to refs/heads/main
+[33md1e0775[m HEAD@{13}: commit: first commit
+[33m9d1b2c2[m HEAD@{14}: Branch: renamed refs/heads/master to refs/heads/main
+[33m9d1b2c2[m HEAD@{16}: commit: first commit
+[33m4d06ed1[m HEAD@{17}: commit: Initial commit of CodeIgniter project
+[33m89715f9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbackup-current[m[33m, [m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m HEAD@{18}: commit (initial): Initial commit: MultiPOS System - Restaurant Management System

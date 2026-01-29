@@ -99,15 +99,16 @@ class Auth extends BaseController
                 $this->session->set($sessionData);
 
                 log_message('info', "User {$username} logged in successfully");
-
-                // Redirect based on role and tenant
-                if ($user->role === 'manager' && $user->tenant_id === null) {
-                    // System admin
-                    return redirect()->to('/admin')->with('success', 'Admin login successful');
-                } elseif ($user->tenant_id) {
-                    // Restaurant user
-                    return redirect()->to("/restaurant/{$user->tenant_id}/dashboard")->with('success', 'Login successful');
-                } else {
+// Redirect based on role and tenant
+if ($user->role === 'manager' && $user->tenant_id === null) {
+    // System admin
+    return redirect()->to('/admin')->with('success', 'Admin login successful');
+} elseif ($user->tenant_id) {
+    // Get tenant slug
+    $tenant = $this->db->table('tenants')->where('id', $user->tenant_id)->get()->getRow();
+    
+    // Restaurant user
+    return redirect()->to("/restaurant/{$tenant->slug}/dashboard")->with('success', 'Login successful');} else {
                     return redirect()->back()->with('error', 'Invalid user configuration');
                 }
             } else {

@@ -22,8 +22,9 @@
             </div>
         </div>
     </div>
-
-    <!-- Stats Cards -->
+    <!-------------------------------
+        Stats Cards Section
+    ---------------------------------->
     <div class="row mb-4">
         <div class="col-md-3 mb-3">
             <div class="card stat-card">
@@ -32,10 +33,12 @@
                         <div class="stat-icon bg-primary me-3">
                             <i class="fas fa-dollar-sign"></i>
                         </div>
+                        <!-- Today's Sales -->
                         <div>
                             <h6 class="card-title mb-1">Today's Sales</h6>
                             <h4 class="mb-0">₱0.00</h4>
                         </div>
+                        <!-- End: Today's Sales -->
                     </div>
                 </div>
             </div>
@@ -47,10 +50,12 @@
                         <div class="stat-icon bg-success me-3">
                             <i class="fas fa-receipt"></i>
                         </div>
+                        <!-- Orders Today -->
                         <div>
                             <h6 class="card-title mb-1">Orders Today</h6>
                             <h4 class="mb-0">0</h4>
                         </div>
+                        <!-- End: Orders Today -->
                     </div>
                 </div>
             </div>
@@ -62,10 +67,12 @@
                         <div class="stat-icon bg-warning me-3">
                             <i class="fas fa-clock"></i>
                         </div>
+                        <!-- Pending Orders -->
                         <div>
                             <h6 class="card-title mb-1">Pending Orders</h6>
                             <h4 class="mb-0">0</h4>
                         </div>
+                        <!-- End: Pending Orders -->
                     </div>
                 </div>
             </div>
@@ -77,17 +84,22 @@
                         <div class="stat-icon bg-info me-3">
                             <i class="fas fa-table"></i>
                         </div>
+                        <!-- Active Tables -->
                         <div>
                             <h6 class="card-title mb-1">Active Tables</h6>
                             <h4 class="mb-0">0</h4>
                         </div>
+                        <!-- End: Active Tables -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Order Status Section -->
+    
+    <!-------------------------------
+        Order Status Section
+    ---------------------------------->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">

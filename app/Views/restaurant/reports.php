@@ -2,6 +2,9 @@
 
 <?= $this->section('content') ?>
 <div class="reports-container">
+    <!---------------------------------- 
+    Contains Reports and Analytics 
+    ----------------------------------->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="fas fa-chart-line"></i> Reports & Analytics</h1>
         <div class="d-flex gap-2">
@@ -13,8 +16,13 @@
             </button>
         </div>
     </div>
+    <!---------------------------------- 
+    Ends: Contains Reports and Analytics 
+    ----------------------------------->
 
-    <!-- Date Range Filter -->
+    <!----------------------------------
+    Date Range Filter 
+    ----------------------------------->
     <div class="card mb-4">
         <div class="card-body">
             <div class="row align-items-center">
@@ -44,15 +52,21 @@
             </div>
         </div>
     </div>
+    <!----------------------------------
+    End: Date Range Filter 
+    ----------------------------------->
 
-    <!-- Key Metrics -->
+    <!----------------------------------
+    Key Metrics: Cards of Total Sales, Total Orders, Avg Order Value, Customer Rating 
+    ----------------------------------->
+     <!-- Total Sales -->
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-0">₱45,230</h4>
+                            <h4 class="mb-0">₱<?= number_format($metrics->total_sales ?? 0, 2) ?></h4>
                             <p class="mb-0">Total Sales</p>
                         </div>
                         <i class="fas fa-dollar-sign fa-2x"></i>
@@ -61,6 +75,7 @@
                 </div>
             </div>
         </div>
+        <!-- Total Orders -->
         <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
@@ -75,6 +90,7 @@
                 </div>
             </div>
         </div>
+        <!-- Avg Order Value -->
         <div class="col-md-3">
             <div class="card bg-warning text-white">
                 <div class="card-body">
@@ -89,6 +105,7 @@
                 </div>
             </div>
         </div>
+        <!-- Customer Rating -->
         <div class="col-md-3">
             <div class="card bg-info text-white">
                 <div class="card-body">
@@ -104,9 +121,15 @@
             </div>
         </div>
     </div>
+    <!----------------------------------
+    End: Key Metrics: Cards of Total Sales, Total Orders, Avg Order Value, Customer Rating  
+    ----------------------------------->
 
-    <!-- Charts Row -->
+    <!----------------------------------
+    Charts Row 
+    ----------------------------------->
     <div class="row mb-4">
+        <!-- Sales Trend Chart -->
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
@@ -117,6 +140,7 @@
                 </div>
             </div>
         </div>
+        <!-- Top Selling Items -->
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
@@ -124,46 +148,36 @@
                 </div>
                 <div class="card-body">
                     <div class="list-group list-group-flush">
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Chicken Burger</strong>
-                                <br>
-                                <small class="text-muted">₱89 each</small>
+                        <?php if (!empty($popular_items)): ?>
+                            <?php foreach ($popular_items as $item): ?>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong><?= $item->name ?></strong>
+                                    
+                                    <br>
+                                    <small class="text-muted">₱<?= number_format($item->price, 2) ?></small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill"><?= $item->orders_count ?> sold</span>
                             </div>
-                            <span class="badge bg-primary rounded-pill">45</span>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Fried Chicken</strong>
-                                <br>
-                                <small class="text-muted">₱75 each</small>
-                            </div>
-                            <span class="badge bg-primary rounded-pill">38</span>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>French Fries</strong>
-                                <br>
-                                <small class="text-muted">₱45 each</small>
-                            </div>
-                            <span class="badge bg-primary rounded-pill">32</span>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Coffee</strong>
-                                <br>
-                                <small class="text-muted">₱35 each</small>
-                            </div>
-                            <span class="badge bg-primary rounded-pill">28</span>
-                        </div>
+                        <?php endforeach; ?>
+                        <?php else: ?>
+        <div class="list-group-item">No data available for this month.</div>
+    <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
+        
     </div>
+    <!----------------------------------
+    End: Charts Row 
+    ----------------------------------->
 
-    <!-- Detailed Reports -->
+    <!----------------------------------  
+    Detailed Reports 
+    ----------------------------------->
     <div class="row">
+        <!-- Hourly Sales -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
@@ -179,38 +193,28 @@
                                     <th>Sales</th>
                                 </tr>
                             </thead>
+                            <!-- Add your php code here -->
                             <tbody>
-                                <tr>
-                                    <td>10:00 AM</td>
-                                    <td>12</td>
-                                    <td>₱1,440</td>
-                                </tr>
-                                <tr>
-                                    <td>11:00 AM</td>
-                                    <td>18</td>
-                                    <td>₱2,160</td>
-                                </tr>
-                                <tr>
-                                    <td>12:00 PM</td>
-                                    <td>25</td>
-                                    <td>₱3,000</td>
-                                </tr>
-                                <tr>
-                                    <td>1:00 PM</td>
-                                    <td>22</td>
-                                    <td>₱2,640</td>
-                                </tr>
-                                <tr>
-                                    <td>2:00 PM</td>
-                                    <td>15</td>
-                                    <td>₱1,800</td>
-                                </tr>
+                                <?php if (!empty($hourly_sales)):?>
+                                    <?php foreach ($hourly_sales as $hour_data): ?>
+                                        <tr>
+                                            <td><?= str_pad($hour_data->hour, 2, '0', STR_PAD_LEFT) ?>:00 - <?= str_pad($hour_data->hour, 2, '0', STR_PAD_LEFT) ?>:59</td>
+                                            <td><?= $hour_data->total_orders ?? 0 ?></td>
+                                            <td>₱<?= number_format($hour_data->total_sales ?? 0, 2) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="3">No hourly sales data available for today.</td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Payment Methods Chart -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
@@ -221,15 +225,23 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Recent Orders -->
+    </div>
+    <!----------------------------------  
+    End: Detailed Reports 
+    ----------------------------------->
+
+    <!----------------------------------
+    Recent Orders 
+    ----------------------------------->
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
+                <!-- Main Header: Recent Orders -->
                 <div class="card-header">
                     <h5 class="card-title mb-0">Recent Orders</h5>
                 </div>
+                <!-- List -->
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -238,44 +250,51 @@
                                     <th>Order ID</th>
                                     <th>Table</th>
                                     <th>Items</th>
+                                    <th>Payment</th>
                                     <th>Total</th>
                                     <th>Status</th>
                                     <th>Time</th>
                                 </tr>
                             </thead>
+                            <!-- Input your php code here -->
                             <tbody>
-                                <tr>
-                                    <td>#1234</td>
-                                    <td>Table 2</td>
-                                    <td>Chicken Burger, French Fries</td>
-                                    <td>₱134</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
-                                    <td>2:30 PM</td>
-                                </tr>
-                                <tr>
-                                    <td>#1235</td>
-                                    <td>Table 7</td>
-                                    <td>Fried Chicken, Coffee</td>
-                                    <td>₱110</td>
-                                    <td><span class="badge bg-warning">In Progress</span></td>
-                                    <td>2:25 PM</td>
-                                </tr>
-                                <tr>
-                                    <td>#1236</td>
-                                    <td>Table 1</td>
-                                    <td>Beef Burger, French Fries, Coffee</td>
-                                    <td>₱175</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
-                                    <td>2:20 PM</td>
-                                </tr>
+                                <?php if (!empty($recent_orders)): ?>
+                                    <?php foreach ($recent_orders as $order): ?>
+                                        <?php 
+                                            $badgeClass = match($order->status) {
+                                                'completed' => 'bg-success',
+                                                'pending' => 'bg-warning',
+                                                'cancelled' => 'bg-danger',
+                                                default => 'bg-secondary'
+                                            };
+                                        ?>
+                                        <tr>
+                                            <td>#<?= $order->id ?></td>
+                                            <td>Table <?= $order->table_number ?? 'N/A' ?></td>
+                                            <td><?= $order->items ?? 'N/A' ?></td>
+                                            <td><?= ucfirst($order->payment_method ?? 'N/A') ?></td>
+                                            <td>₱<?= number_format($order->total_amount, 2) ?></td>
+                                            <td><span class="badge <?= $badgeClass ?>"><?= ucfirst($order->status) ?></span></td>
+                                            <td><?= date('g:i A', strtotime($order->ordered_at)) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                        <tr>
+                                            <td colspan="6" class="text-center">No recent orders found.</td>
+                                        </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
+<!----------------------------------
+End: Recent Orders 
+----------------------------------->
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -283,125 +302,302 @@
 <script>
 let salesChart, paymentChart;
 
-$(document).ready(function() {
-    initializeCharts();
+// Helper function to detect which preset a date range matches
+function detectPreset(fromDate, toDate) {
+    if (fromDate === toDate) {
+        const today = formatDateISO(new Date());
+        if (fromDate === today) return 'today';
+        
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = formatDateISO(yesterday);
+        if (fromDate === yesterdayStr) return 'yesterday';
+    }
+    return 'custom';
+}
+
+// Global date formatting function
+function formatDateISO(d) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Global preset dates function
+function getPresetDates(preset) {
+    const today = new Date();
     
-    // Date range change handler
-    $('#dateRange').change(function() {
-        if ($(this).val() === 'custom') {
-            $('#customDateRange, #customDateRange2').show();
-        } else {
-            $('#customDateRange, #customDateRange2').hide();
+    switch(preset) {
+        case 'today': {
+            const dateStr = formatDateISO(today);
+            return { from: dateStr, to: dateStr };
         }
-    });
-});
+        case 'yesterday': {
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            const dateStr = formatDateISO(yesterday);
+            return { from: dateStr, to: dateStr };
+        }
+        case 'week': {
+            const weekStart = new Date(today);
+            const day = weekStart.getDay();
+            const diff = weekStart.getDate() - day;
+            weekStart.setDate(diff);
+            return { 
+                from: formatDateISO(weekStart), 
+                to: formatDateISO(today) 
+            };
+        }
+        case 'month': {
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            return { 
+                from: formatDateISO(monthStart), 
+                to: formatDateISO(today) 
+            };
+        }
+        default:
+            return null;
+    }
+}
+
+function handleDateRangeChange() {
+    const dateRange = $('#dateRange').val();
+    
+    // Show/hide custom date inputs
+    if (dateRange === 'custom') {
+        $('#customDateRange, #customDateRange2').show();
+    } else {
+        $('#customDateRange, #customDateRange2').hide();
+        // Update the date inputs with preset values
+        const dates = getPresetDates(dateRange);
+        if (dates) {
+            $('#fromDate').val(dates.from);
+            $('#toDate').val(dates.to);
+        }
+    }
+    
+    // Reinitialize charts immediately
+    initializeCharts();
+}
 
 function initializeCharts() {
-    // Sales Chart
-    const salesCtx = document.getElementById('salesChart').getContext('2d');
-    salesChart = new Chart(salesCtx, {
-        type: 'line',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Daily Sales',
-                data: [12000, 15000, 18000, 14000, 22000, 25000, 20000],
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '₱' + value.toLocaleString();
+    try {
+        // Check what data we should use based on the current range
+        const dateRange = $('#dateRange').val();
+        const isHourly = (dateRange === 'today' || dateRange === 'yesterday');
+        
+        let chartLabels = [];
+        let chartData = [];
+        let chartTitle = 'Sales Trend';
+        
+        if (isHourly) {
+            // Use hourly data
+            const hourlyData = <?= json_encode($hourly_sales ?? []) ?>;
+            
+            // Create labels and data for all 24 hours
+            for (let i = 0; i < 24; i++) {
+                const hour = String(i).padStart(2, '0');
+                chartLabels.push(hour + ':00');
+                
+                // Find data for this hour
+                const hourData = hourlyData.find(item => parseInt(item.hour) === i);
+                chartData.push(hourData ? parseFloat(hourData.total_sales) : 0);
+            }
+            
+            chartTitle = dateRange === 'today' ? 'Hourly Sales - Today' : 'Hourly Sales - Yesterday';
+        } else {
+            // Use daily data
+            const salesData = <?= json_encode($daily_sales ?? []) ?>;
+            chartLabels = salesData.map(item => item.sale_date);
+            chartData = salesData.map(item => parseFloat(item.total_daily_sales));
+            chartTitle = 'Daily Sales Trend';
+        }
+        
+        // Update the chart title
+        $('#chartTitle').text(chartTitle);
+        
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        
+        // Destroy existing chart if it exists
+        if (salesChart) {
+            salesChart.destroy();
+        }
+        
+        salesChart = new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: chartTitle,
+                    data: chartData,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgb(75, 192, 192)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₱' + value.toLocaleString('en-US', {minimumFractionDigits: 0});
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '₱' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2});
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        });
 
-    // Payment Methods Chart
-    const paymentCtx = document.getElementById('paymentChart').getContext('2d');
-    paymentChart = new Chart(paymentCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Cash', 'Credit Card', 'Digital Wallet', 'Bank Transfer'],
-            datasets: [{
-                data: [45, 30, 20, 5],
-                backgroundColor: [
-                    '#28a745',
-                    '#007bff',
-                    '#ffc107',
-                    '#6c757d'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+        // Initialize Payment Methods Chart
+        const paymentData = <?= json_encode($payment_methods ?? []) ?>;
+        const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+        
+        // Destroy existing payment chart if it exists
+        if (paymentChart) {
+            paymentChart.destroy();
+        }
+        
+        paymentChart = new Chart(paymentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: paymentData.map(p => p.payment_method.charAt(0).toUpperCase() + p.payment_method.slice(1)),
+                datasets: [{
+                    data: paymentData.map(p => parseFloat(p.total_amount)),
+                    backgroundColor: [
+                        '#28a745',
+                        '#007bff',
+                        '#ffc107',
+                        '#6c757d',
+                        '#dc3545'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '₱' + context.parsed.toLocaleString('en-US', {minimumFractionDigits: 2});
+                            }
+                        }
+                    }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error initializing charts:', error);
+    }
 }
+
+$(document).ready(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromDateParam = urlParams.get('fromDate');
+    const toDateParam = urlParams.get('toDate');
+    const rangeTypeParam = urlParams.get('rangeType');
+
+    // 1. Check if we have dates in the URL first
+    if (fromDateParam && toDateParam) {
+        $('#fromDate').val(fromDateParam);
+        $('#toDate').val(toDateParam);
+
+        // 2. Decide what the dropdown should show
+        if (rangeTypeParam) {
+            $('#dateRange').val(rangeTypeParam);
+        } else {
+            const detected = detectPreset(fromDateParam, toDateParam);
+            $('#dateRange').val(detected);
+        }
+
+        // 3. Show/Hide custom inputs based on the selection
+        if ($('#dateRange').val() === 'custom') {
+            $('#customDateRange, #customDateRange2').show();
+        } else {
+            $('#customDateRange, #customDateRange2').hide();
+        }
+    } else {
+        // DEFAULT: Use "This Month"
+        const defaultDates = getPresetDates('month');
+        $('#dateRange').val('month');
+        $('#fromDate').val(defaultDates.from);
+        $('#toDate').val(defaultDates.to);
+        $('#customDateRange, #customDateRange2').hide();
+    }
+
+    // Initialize charts
+    initializeCharts();
+});
 
 function updateReports() {
     const dateRange = $('#dateRange').val();
     let fromDate, toDate;
-    
+
     if (dateRange === 'custom') {
         fromDate = $('#fromDate').val();
         toDate = $('#toDate').val();
+
+        if (!fromDate || !toDate) {
+            alert('Please select both from and to dates');
+            return;
+        }
+
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(fromDate) || !/^\d{4}-\d{2}-\d{2}$/.test(toDate)) {
+            alert('Invalid date format');
+            return;
+        }
+
+        if (new Date(fromDate) > new Date(toDate)) {
+            alert('From date must be before or equal to to date');
+            return;
+        }
     } else {
-        // Calculate dates based on selection
-        const today = new Date();
-        switch(dateRange) {
-            case 'today':
-                fromDate = toDate = today.toISOString().split('T')[0];
-                break;
-            case 'yesterday':
-                const yesterday = new Date(today);
-                yesterday.setDate(yesterday.getDate() - 1);
-                fromDate = toDate = yesterday.toISOString().split('T')[0];
-                break;
-            case 'week':
-                const weekStart = new Date(today);
-                weekStart.setDate(today.getDate() - today.getDay());
-                fromDate = weekStart.toISOString().split('T')[0];
-                toDate = today.toISOString().split('T')[0];
-                break;
-            case 'month':
-                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                fromDate = monthStart.toISOString().split('T')[0];
-                toDate = today.toISOString().split('T')[0];
-                break;
+        const dates = getPresetDates(dateRange);
+        if (dates) {
+            fromDate = dates.from;
+            toDate = dates.to;
+        } else {
+            alert('Invalid date range selection');
+            return;
         }
     }
-    
-    console.log('Updating reports for:', fromDate, 'to', toDate);
-    
-    // Simulate data update
-    alert('Reports updated for the selected date range!');
+
+    const tenantSlug = '<?= $tenant_slug ?>';
+    const url = `<?= base_url("restaurant/") ?>${tenantSlug}/reports?fromDate=${fromDate}&toDate=${toDate}&rangeType=${dateRange}`;
+    window.location.href = url;
 }
 
 function exportReport() {
-    const dateRange = $('#dateRange').val();
-    alert(`Exporting ${dateRange} report...`);
+    const fromDate = $('#fromDate').val();
+    const toDate = $('#toDate').val();
     
-    // Simulate export functionality
-    setTimeout(() => {
-        alert('Report exported successfully!');
-    }, 1000);
+    const baseUrl = "<?= base_url("restaurant/{$tenant_slug}/reports/export") ?>";
+    window.location.href = `${baseUrl}?fromDate=${fromDate}&toDate=${toDate}`;
 }
 
 function refreshReports() {

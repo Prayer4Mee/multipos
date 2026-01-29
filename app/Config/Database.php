@@ -27,8 +27,8 @@ class Database extends Config
     public array $default = [
         'DSN'          => '',
         'hostname'     => 'localhost',
-        'username'     => 'phpmyadmin',
-        'password'     => 'zxcqwe123$',
+        'username'     => 'root',
+        'password'     => 'root',
         'database'     => 'multipos',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
@@ -44,11 +44,6 @@ class Database extends Config
         'port'         => 3306,
         'numberNative' => false,
         'foundRows'    => false,
-        'dateFormat'   => [
-            'date'     => 'Y-m-d',
-            'datetime' => 'Y-m-d H:i:s',
-            'time'     => 'H:i:s',
-        ],
     ];
 
 
@@ -56,8 +51,8 @@ class Database extends Config
     public array $tenant = [
         'DSN'          => '',
         'hostname'     => 'localhost',
-        'username'     => 'phpmyadmin',
-        'password'     => 'zxcqwe123$',
+        'username'     => 'root',
+        'password'     => '',
         'database'     => 'multipos',  // Will be set dynamically
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',

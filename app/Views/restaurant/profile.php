@@ -47,7 +47,7 @@
                     <div class="row mb-3">
                         <div class="col-sm-4"><strong>Theme Color:</strong></div>
                         <div class="col-sm-8">
-                            <span class="badge" style="background-color: <?= $tenant->theme_color ?? '#667eea' ?>; color: white;">
+                            <span class="badge" style="background-color: <?= $settings->theme_color ?? '#667eea' ?>; color: white;">
                                 <?= $tenant->theme_color ?? '#667eea' ?>
                             </span>
                         </div>
@@ -109,25 +109,25 @@
                     <div class="row">
                         <div class="col-md-3">
                             <div class="text-center">
-                                <h3 class="text-primary">8</h3>
+                                <h3 class="text-primary"><?= $total_tables ?? 0 ?></h3>
                                 <p class="text-muted">Total Tables</p>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-center">
-                                <h3 class="text-success">15</h3>
+                                <h3 class="text-success"><?= $menu_items ?? 0 ?></h3>
                                 <p class="text-muted">Menu Items</p>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-center">
-                                <h3 class="text-warning">3</h3>
+                                <h3 class="text-warning"><?= $active_orders ?? 0 ?></h3>
                                 <p class="text-muted">Active Orders</p>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-center">
-                                <h3 class="text-info">₱12,450</h3>
+                                <h3 class="text-info">₱<?= number_format($today_revenue ?? 0, 2) ?></h3>
                                 <p class="text-muted">Today's Revenue</p>
                             </div>
                         </div>
@@ -186,7 +186,7 @@
                     <div class="mb-3">
                         <label class="form-label">Theme Color</label>
                         <input type="color" class="form-control form-control-color" name="theme_color"
-                               value="<?= $tenant->theme_color ?? '#667eea' ?>">
+                               value="<?= $settings->theme_color ?? '#667eea' ?>">
                     </div>
                 </form>
             </div>

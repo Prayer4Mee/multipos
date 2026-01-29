@@ -11,14 +11,21 @@ use App\Models\Tenant\OrderModel;
  */
 class OrderController extends BaseRestaurantController
 {
-    protected $orderModel;
+    // protected $orderModel;
     
-    public function __construct()
-    {
-        parent::__construct();
-        $this->orderModel = new OrderModel();
-        $this->orderModel->setDB($this->tenantDb);
-    }
+    // public function __construct()
+    // {
+    //     parent::__construct();
+    //     // Initialize OrderModel after parent constructor
+    //     // so that $this->tenantDb is available
+    //     try {
+    //     $this->orderModel = new OrderModel();
+    //     $this->orderModel->setDB($this->tenantDb);
+    //     } catch (\Exception $e) {
+    //         log_message('error', 'Failed to initialize OrderModel: ' . $e->getMessage());
+    //         throw new \Exception('Cannot initialize OrderModel: ' . $e->getMessage());
+    //     }
+    // }
     
     /**
      * 주문 목록 조회 (모든 페이지에서 사용)
@@ -80,7 +87,7 @@ class OrderController extends BaseRestaurantController
     /**
      * 주문 생성
      */
-    public function createOrder()
+    public function createOrder($slug = null)
     {
         try {
             $rules = [
@@ -88,7 +95,7 @@ class OrderController extends BaseRestaurantController
                 'customer_name' => 'permit_empty|max_length[100]',
                 'table_ids' => 'permit_empty',
                 'waiter_id' => 'permit_empty|integer',
-                'items' => 'required'
+                'items' => 'permit_empty'
             ];
             
             if (!$this->validate($rules)) {
@@ -109,7 +116,7 @@ class OrderController extends BaseRestaurantController
                 'customer_phone' => $this->request->getPost('customer_phone'),
                 'customer_email' => $this->request->getPost('customer_email'),
                 'waiter_id' => $this->request->getPost('waiter_id'),
-                'cashier_id' => $this->currentUser->id,
+                'cashier_id' => ($this->currentUser) ? $this->currentUser->id : 0,
                 'special_instructions' => $this->request->getPost('special_instructions'),
                 'status' => 'created',
                 'priority_level' => 'normal',
@@ -167,7 +174,9 @@ class OrderController extends BaseRestaurantController
                 'success' => true,
                 'order_id' => $orderId,
                 'order_number' => $orderNumber,
-                'message' => 'Order created successfully'
+                'message' => 'Order created successfully',
+                // Added this line
+                'redirect_url' => base_url("restaurant/{$slug}/payment/{$orderId}")
             ]);
             
         } catch (\Exception $e) {

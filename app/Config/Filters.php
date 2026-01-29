@@ -28,6 +28,15 @@ class Filters extends BaseConfig
             'csrf' => ['except' => [
                 'webhook/*',
                 'api/*',
+                'restaurant/*/create-order*',
+                'restaurant/*/kitchen/*',         // ✅ Add this for controller-based URLs
+                // 'restaurant/*/api/update-order-status' // ✅ Add this for your specific API route
+                'restaurant/*/update-table-status',
+                'restaurant/*/update-order-status',
+                'restaurant/*/update-table-status',
+                'restaurant/*/place-order',
+                'restaurant/*/current-orders',
+                
             ]],
             'invalidchars',
         ],

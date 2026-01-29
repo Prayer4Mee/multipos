@@ -174,7 +174,7 @@ if (!isset($tenant)) {
     function loadOrders() {
         const tenantSlug = '<?= $tenant->slug ?? "jollibee" ?>';
         $.ajax({
-            url: `<?= $base_url ?? base_url() ?>restaurant/${tenantSlug}/kitchen/ajax-orders`,
+            url: `<?= $base_url ?? base_url() ?>restaurant/${tenantSlug}/kitchen/ajaxOrders`,
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -263,13 +263,13 @@ if (!isset($tenant)) {
                                 <div class="col-6">
                                     <div class="info-item">
                                         <i class="fas fa-table text-primary"></i>
-                                        <strong>Table:</strong> ${order.table_number || 'N/A'}
+                                        <strong>Table:</strong> ${order.table_numbers || 'N/A'}
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="info-item">
                                         <i class="fas fa-user text-info"></i>
-                                        <strong>Waiter:</strong> ${order.waiter_name || 'N/A'}
+                                        <strong>Waiter:</strong> ${order.waiter_names || 'N/A'} 
                                     </div>
                                 </div>
                             </div>
@@ -331,7 +331,7 @@ if (!isset($tenant)) {
 
         const tenantSlug = '<?= $tenant->slug ?? "jollibee" ?>';
         $.ajax({
-            url: `<?= $base_url ?? base_url() ?>restaurant/${tenantSlug}/kitchen/update-order-status`,
+            url: `<?= $base_url ?? base_url() ?>restaurant/${tenantSlug}/kitchen/updateOrderStatus`,
             method: 'POST',
             data: {
                 order_id: orderId,
@@ -458,6 +458,9 @@ if (!isset($tenant)) {
         
         // Show appropriate buttons based on status
         switch (status) {
+            case 'created':
+            case 'confirmed':
+                // Now both 'pending' and 'confirmed' will trigger the 'Prepare' button
             case 'pending':
                 $('#btn-start-preparing').show();
                 break;
@@ -492,7 +495,9 @@ if (!isset($tenant)) {
     
     function updateStatistics(orders) {
         const stats = {
-            pending: orders.filter(o => o.status === 'pending' || o.status === 'created').length,
+            pending: orders.filter(o => o.status === 'pending' || 
+            o.status === 'confirmed' || 
+            o.status === 'created').length,
             preparing: orders.filter(o => o.status === 'preparing').length,
             ready: orders.filter(o => o.status === 'ready').length
         };
