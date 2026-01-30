@@ -253,7 +253,7 @@ function createOrderListItem(order) {
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h6 class="mb-1">#${order.order_number}</h6>
-                    <p class="mb-1 text-muted small">Table ${order.table_numbers || 'N/A'}</p>
+                    <p class="mb-1 text-muted small">Table ${order.table_number || 'N/A'}</p>
                     <p class="mb-0 text-muted small">${order.item_count || 0} items</p>
                 </div>
                 <div class="text-end">
@@ -397,10 +397,25 @@ function displayOrderDetails(order) {
     // Update the order details section
     $('#orderDetailsSection').html(orderDetailsHtml);
 }
+function getOrderDisplayStatus(order) {
+    if (order.status === 'served' && order.payment_status === 'paid') {
+        return 'Completed ✓';
+    }
+    if (order.status === 'served' && order.payment_status === 'pending') {
+        return 'Served (Unpaid)';
+    }
+    if (order.status !== 'served' && order.payment_status === 'paid') {
+        return 'Paid (Not Served)';
+    }
+    if (order.payment_status === 'refunded') {
+        return 'Refunded';
+    }
+    return order.status.charAt(0).toUpperCase() + order.status.slice(1);
+}
 
 function proceedToPayment(orderId) {
     // Redirect to payment page
-    window.location.href = `<?= base_url("restaurant/{$tenant->tenant_slug}/payment") ?>/${orderId}`;
+     window.location.href = `<?= base_url("restaurant/{$tenant_slug}/payment") ?>/${orderId}`;
 }
 
 

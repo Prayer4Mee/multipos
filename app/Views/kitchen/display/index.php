@@ -203,7 +203,7 @@ if (!isset($tenant)) {
                 // Show notification for new orders
                 if (newOrders.length > 0) {
                     newOrders.forEach(order => {
-                        showNotification(`New order #${order.order_number} from Table ${order.table_number}`, 'info');
+                        showNotification(`New order #${order.order_number} from Table ${order.table_numbers}`, 'info');
                     });
                 }
             },
@@ -274,7 +274,8 @@ if (!isset($tenant)) {
                                 </div>
                             </div>
                             <div class="mt-2">
-                                <span class="badge bg-${getStatusColor(order.status)} fs-6">${order.status.toUpperCase()}</span>
+                                <span class="badge bg-${getStatusColor(order.status)} fs-6">${order.status.toUpperCase()}                            
+                                </span>
                             </div>
                         </div>
                         
@@ -310,11 +311,6 @@ if (!isset($tenant)) {
                             ${order.kitchen_status === 'preparing' ? `
                                 <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); updateOrderStatus('ready', ${order.id})">
                                     <i class="fas fa-check"></i> Ready
-                                </button>
-                            ` : ''}
-                            ${order.kitchen_status === 'ready' ? `
-                                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); updateOrderStatus('served', ${order.id})">
-                                    <i class="fas fa-check-double"></i> Served
                                 </button>
                             ` : ''}
                         </div>
@@ -386,11 +382,11 @@ if (!isset($tenant)) {
                     <h6 class="text-primary">Order Information</h6>
                     <div class="info-item mb-2">
                         <i class="fas fa-table text-primary"></i>
-                        <strong>Table:</strong> ${order.table_number || 'N/A'}
+                        <strong>Table:</strong> ${order.table_numbers || 'N/A'}
                     </div>
                     <div class="info-item mb-2">
                         <i class="fas fa-user text-info"></i>
-                        <strong>Waiter:</strong> ${order.waiter_name || 'N/A'}
+                        <strong>Waiter:</strong> ${order.waiter_names || 'N/A'}
                     </div>
                     <div class="info-item mb-2">
                         <i class="fas fa-clock text-warning"></i>
@@ -404,7 +400,7 @@ if (!isset($tenant)) {
                 <div class="col-md-6">
                     <h6 class="text-success">Order Status</h6>
                     <div class="status-badge mb-3">
-                        <span class="badge bg-${getStatusColor(order.status)} fs-6">${order.status.toUpperCase()}</span>
+                        <span class="badge bg-${getStatusColor(order.status)} fs-6">${(order.status || 'pending').toUpperCase()}</span>
                     </div>
                     <div class="info-item mb-2">
                         <i class="fas fa-hourglass-half text-warning"></i>
@@ -468,7 +464,7 @@ if (!isset($tenant)) {
                 $('#btn-mark-ready').show();
                 break;
             case 'ready':
-                $('#btn-mark-served').show();
+                // Ends here - no more served button!
                 break;
         }
     }
@@ -552,10 +548,13 @@ if (!isset($tenant)) {
     }
     
     function getStatusColor(status) {
+        if (!status) return 'secondary';  // Add safety check
+
         switch (status) {
             case 'pending': return 'warning';
             case 'preparing': return 'info';
             case 'ready': return 'success';
+            case 'confirmed' : return 'secondary';
             default: return 'secondary';
         }
     }

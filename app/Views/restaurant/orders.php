@@ -5,10 +5,10 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="fas fa-clipboard-check"></i> Orders Management</h1>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary" onclick="refreshOrders()">
+            <button class="btn btn-outline-primary" onclick="location.reload()">
                 <i class="fas fa-sync-alt"></i> Refresh
             </button>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newOrderModal">
+            <button class="btn btn-primary" onclick="location.href='<?= base_url('restaurant/' . $tenant_slug . '/new-order') ?>'">
                 <i class="fas fa-plus"></i> New Order
             </button>
         </div>
@@ -55,22 +55,54 @@
 <?php foreach ($orders as $order): ?>
 
 <?php
-    $statusMap = [
-        'pending'   => ['warning', 'Pending'],
-        'preparing' => ['info', 'Preparing'],
-        'ready'     => ['success', 'Ready'],
-        'completed' => ['secondary', 'Completed'],
-        'served'    => ['success', 'Served'],
-        'cancelled' => ['danger', 'Cancelled']
-    ];
-
-    [$badgeClass, $badgeText] = $statusMap[$order->status] ?? ['dark', ucfirst($order->status)];
+    // Determine actual status based on served + paid logic
+    // 1 COMPLETED always
+    if ($order->status === 'completed') {
+        $displayStatus = 'completed';
+        $badgeText = 'Completed ✓';
+        $badgeClass = 'success';
+    // } if ($order->status === 'served' && $order->payment_status === 'paid') {
+    //     $displayStatus = 'completed';
+    //     $badgeText = 'Completed ✓';
+    //     $badgeClass = 'success';
+    // 2. Served but not paying yet!
+    } elseif ($order->status === 'served' && $order->payment_status === 'pending') {
+        $displayStatus = 'served-unpaid';
+        $badgeText = 'Served (Unpaid)';
+        $badgeClass = 'warning';
+    } elseif ($order->status !== 'served' && $order->payment_status === 'paid') {
+        $displayStatus = 'paid-unserved';
+        $badgeText = 'Paid (Not Served)';
+        $badgeClass = 'info';
+    // 3. Paid but not yet served
+    } elseif (
+        $order->payment_status === 'paid' && !in_array($order->status, ['served', 'completed'])) {
+        $displayStatus = 'paid-unserved';
+        $badgeText = 'Paid (Not Served)';
+        $badgeClass = 'info';
+    // 4. Special Case = refund
+    } elseif ($order->payment_status === 'refunded') {
+        $displayStatus = 'refunded';
+        $badgeText = 'Refunded';
+        $badgeClass = 'danger';
+    // 5. Work flow: pending->preparing->ready->served
+    } else {
+        $statusMap = [
+            'pending'   => ['warning', 'Pending'],
+            'preparing' => ['info', 'Preparing'],
+            'ready'     => ['success', 'Ready'],
+            'served'    => ['success', 'Served'],
+            'cancelled' => ['danger', 'Cancelled']
+        ];
+        [$badgeClass, $badgeText] = $statusMap[$order->status] ?? ['dark', ucfirst($order->status)];
+        $displayStatus = $order->status;
+    }
 ?>
-
+<!-- Detection Filter -->
 <div class="col-md-6 col-lg-4 mb-3">
     <div class="card order-card"
          data-order-id="<?= esc($order->id) ?>"
-         data-status="<?= esc($order->status) ?>">
+         data-status="<?= esc($displayStatus) ?>">
 
         <div class="card-header d-flex justify-content-between align-items-center">
             <h6 class="mb-0">Order #<?= esc($order->id) ?></h6>
@@ -110,46 +142,47 @@
                 <?php endforeach; ?>
             </div>
             
-
+<!-- Take note: This is where you can change the status of your orders! -->
             <!-- Wrapper for Cancelled Button -->
-            <?php if ($order->status !== 'cancelled'): ?>
+            <?php $isCompleted = ($order->status === 'completed');?>
+                
             <div class="mt-3">
                 <div class="btn-group w-100">
+                    <?php if (!$isCompleted && $order->status !== 'cancelled'): ?>
 
-                    <?php if ($order->status === 'pending'): ?>
-                        <button class="btn btn-sm btn-outline-info"
-                                onclick="startPreparing(<?= $order->id ?>)">
-                            <i class="fas fa-play"></i> Start
+                        <?php if ($order->status === 'pending'): ?>
+                            <button class="btn btn-sm btn-outline-info"
+                                    onclick="startPreparing(<?= $order->id ?>)">
+                                <i class="fas fa-play"></i> Start
+                            </button>
+
+                        <?php elseif ($order->status === 'preparing'): ?>
+                            <button class="btn btn-sm btn-outline-success"
+                                    onclick="markReady(<?= $order->id ?>)">
+                                <i class="fas fa-check"></i> Ready
+                            </button>
+
+                        <?php elseif ($order->status === 'ready'): ?>
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    onclick="markServed(<?= $order->id ?>)">
+                                <i class="fas fa-check-circle"></i> Served
+                            </button>
+                        <?php endif; ?>
+                    <?php endif; ?> <!-- end cancelled wrapper -->
+            <!-- Note: Always show this!!!!! -->
+                        <button class="btn btn-sm btn-outline-primary"
+                                onclick="viewOrder(<?= $order->id ?>)">
+                            <i class="fas fa-eye"></i> View
                         </button>
 
-                    <?php elseif ($order->status === 'preparing'): ?>
-                        <button class="btn btn-sm btn-outline-success"
-                                onclick="markReady(<?= $order->id ?>)">
-                            <i class="fas fa-check"></i> Ready
-                        </button>
-
-                    <?php elseif ($order->status === 'ready'): ?>
-                        <button class="btn btn-sm btn-outline-secondary"
-                                onclick="markCompleted(<?= $order->id ?>)">
-                            <i class="fas fa-check-circle"></i> Complete
-                        </button>
-                    <?php endif; ?>
-
-                    <button class="btn btn-sm btn-outline-primary"
-                            onclick="viewOrder(<?= $order->id ?>)">
-                        <i class="fas fa-eye"></i> View
-                    </button>
-
-                    <?php if ($order->status === 'completed'): ?>
+                        <!-- Always show print receipt button -->
                         <button class="btn btn-sm btn-outline-info"
                                 onclick="reprintReceipt(<?= $order->id ?>)">
                             <i class="fas fa-print"></i> Receipt
                         </button>
-                    <?php endif; ?>
 
                 </div>
             </div>
-            <?php endif; ?> <!-- end cancelled wrapper -->
         </div>
     </div>
 </div>
@@ -298,9 +331,21 @@ function filterOrders(status) {
     }
 
     // Append the sorted/filtered cards back to container
+    // Isn't this problematic? key words: problem, errors, prone to error
     container.empty().append(filtered);
 }
-
+// Helper function to escape HTML and prevent XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
 function markReady(orderId) {
     if (confirm('Mark order #' + orderId + ' as ready?')) {
         $.ajax({
@@ -325,8 +370,8 @@ function markReady(orderId) {
         // 4. Update buttons
         const buttonGroup = orderCard.find('.btn-group');
         buttonGroup.html(`
-            <button class="btn btn-sm btn-outline-secondary" onclick="markCompleted(${orderId})">
-                <i class="fas fa-check-circle"></i> Complete
+            <button class="btn btn-sm btn-outline-secondary" onclick="(${orderId})">
+                <i class="fas fa-check-circle"></i> Served
             </button>
             <button class="btn btn-sm btn-outline-primary" onclick="viewOrder(${orderId})">
                 <i class="fas fa-eye"></i> View
@@ -379,45 +424,86 @@ function startPreparing(orderId) {
         });
     }
 }
-
-function markCompleted(orderId) {
-    if (confirm('Mark order #' + orderId + ' as completed?')) {
+function markServed(orderId) {
+    if (confirm('Mark order #' + orderId + ' as served?')) {
         $.ajax({
             url: '<?= base_url("restaurant/{$tenant_slug}/update-order-status") ?>',
             method: 'POST',
             data: {
                 order_id: orderId,
-                status: 'completed'
-        },
-        success: function (response) {
-        // Update UI
-        // 1. Update Card
-        const orderCard = $(`.order-card[data-order-id="${orderId}"]`);
-        // 2. Update Badge
-        orderCard.find('.badge')
-        .removeClass('bg-success')
-        .addClass('bg-secondary')
-        .text('Completed');
-        // 3. Update Data Attribute
-        orderCard.attr('data-status', 'completed');
-
-        // 4. Update buttons
-        const buttonGroup = orderCard.find('.btn-group');
-        buttonGroup.html(`
-            <button class="btn btn-sm btn-outline-primary" onclick="viewOrder(${orderId})">
-                <i class="fas fa-eye"></i> View Details
-            </button>
-            <button class="btn btn-sm btn-outline-info" onclick="reprintReceipt(${orderId})">
-                <i class="fas fa-print"></i> Receipt
-            </button>
-        `);
-        },
-        error:function(xhr) {
-            alert('Error: ' + (xhr.responseJSON ? xhr.responseJSON .error : 'Server Error'));
+                status: 'served'
+            },
+            success: function (response) {
+                const orderCard = $(`.order-card[data-order-id="${orderId}"]`);
+                
+                // Reload order details to check payment status
+                $.ajax({
+                    url: `<?= base_url("restaurant/{$tenant_slug}/order-details") ?>/${orderId}`,
+                    method: 'GET',
+                    success: function(resp) {
+                        const order = resp.order;
+                        let badgeText = 'Served';
+                        let badgeClass = 'success';
+                        let showPaymentButton = true;
+                        
+                        // Check if both served AND paid
+                        if (order.payment_status === 'paid') {
+                            badgeText = 'Completed ✓';
+                            badgeClass = 'success';
+                            showPaymentButton = false;
+                        }
+                        
+                        // Update badge
+                        orderCard.find('.badge')
+                            .removeClass('bg-warning bg-info bg-secondary')
+                            .addClass(`bg-${badgeClass}`)
+                            .text(badgeText);
+                        
+                        // Update data attribute
+                        orderCard.attr('data-status', order.payment_status === 'paid' ? 'completed' : 'served');
+                        
+                        // Update buttons
+                        const buttonGroup = orderCard.find('.btn-group');
+                        let buttonHtml = `
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewOrder(${orderId})">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        `;
+                        
+                        if (showPaymentButton && order.payment_status !== 'paid') {
+                            buttonHtml += `
+                                <button class="btn btn-sm btn-outline-primary" onclick="proceedToPayment(${orderId})">
+                                    <i class="fas fa-credit-card"></i> Payment
+                                </button>
+                            `;
+                        }
+                        
+                        buttonHtml += `
+                            <button class="btn btn-sm btn-outline-info" onclick="reprintReceipt(${orderId})">
+                                <i class="fas fa-print"></i> Receipt
+                            </button>
+                        `;
+                        
+                        buttonGroup.html(buttonHtml);
+                        
+                        showNotification('Order marked as served', 'success');
+                    },
+                    error: function() {
+                        showNotification('Error refreshing order status', 'error');
+                    }
+                });
+            },
+            error: function(xhr) {
+                alert('Error: ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Server Error'));
             }
         });
     }
 }
+
+function proceedToPayment(orderId) {
+    window.location.href = `<?= base_url("restaurant/{$tenant_slug}/payment") ?>/${orderId}`;
+}
+
 // Allows you to view details to the right side of the screen when you click something
 function viewOrder(orderId) {
     // Show loading state
@@ -512,24 +598,63 @@ function viewOrder(orderId) {
     $('#viewOrderModal').modal('show');
 }
 
-// Helper function to escape HTML and prevent XSS
-function escapeHtml(text) {
-    if (!text) return '';
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
+
+function getOrderDisplayStatus(order) {
+    // Both served AND paid = Completed
+    if (order.status === 'served' && order.payment_status === 'paid') {
+        return {
+            status: 'completed',
+            text: 'Completed',
+            badgeClass: 'bg-success'
+        };
+    }
+    
+    // Served but not paid yet
+    if (order.status === 'served' && order.payment_status === 'pending') {
+        return {
+            status: 'served-unpaid',
+            text: 'Served (Unpaid)',
+            badgeClass: 'bg-warning'
+        };
+    }
+    
+    // Paid but not served yet
+    if (order.status !== 'served' && order.payment_status === 'paid') {
+        return {
+            status: 'paid-unserved',
+            text: 'Paid (Not Served)',
+            badgeClass: 'bg-info'
+        };
+    }
+    
+    // Refunded
+    if (order.payment_status === 'refunded') {
+        return {
+            status: 'refunded',
+            text: 'Refunded',
+            badgeClass: 'bg-danger'
+        };
+    }
+    
+    // Standard statuses
+    const statusMap = {
+        'pending': { text: 'Pending', badgeClass: 'bg-warning' },
+        'preparing': { text: 'Preparing', badgeClass: 'bg-info' },
+        'ready': { text: 'Ready', badgeClass: 'bg-success' },
+        'served': { text: 'Served', badgeClass: 'bg-success' }
     };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    
+    const mapping = statusMap[order.status] || { text: order.status, badgeClass: 'bg-secondary' };
+    return {
+        status: order.status,
+        text: mapping.text,
+        badgeClass: mapping.badgeClass
+    };
 }
 
 
-
 function reprintReceipt(orderId) {
-    // Simulate reprinting receipt
-    alert('Reprinting receipt for order #' + orderId);
+    window.open(`<?= base_url("restaurant/{$tenant_slug}/print-receipt") ?>/${orderId}`, '_blank');
 }
 
 function createOrder() {

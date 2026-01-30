@@ -207,29 +207,43 @@ class Payment extends BaseRestaurantController
 
         try {
             // 주문 존재 확인
-            $order = $this->orderModel->find($orderId);
+            // ============================================================================
+            // FIX: Use tenantDb directly to get OBJECT, not array
+            // OLD: $order = $this->orderModel->find($orderId); Returns array
+            // NEW: $this->tenantDb->table(...)->getRow(); Returns object
+            // ============================================================================
+            $order = $this->tenantDb->table('orders')
+                                    ->where('id', $orderId)
+                                    ->get()
+                                    ->getRow();  // ← This returns an object, not array!
 
-            
             if (!$order) {
                 return $this->jsonResponse(['error' => 'Order not found'], 404);
             }
-            
+            // Starts transaction for payment processing
             // 결제 처리
             $this->tenantDb->transStart();
-            
+            // Prepare update data
             // 주문 상태 업데이트
             $updateData = [
                 'payment_method' => $paymentMethod,
                 'amount_received' => $amountReceived,
                 'change_amount' => $changeAmount,
                 'payment_status' => 'paid',
-                'status' => 'completed',
+                // 'status' => 'completed',
                 'completed_at' => date('Y-m-d H:i:s'),
                 'discount_type'   => $discountType,
                 'discount_amount' => $discountAmount
                 
                 
             ];
+            // Only mark as "Completed" IF AND ONLY IF it is already "Served"
+            if ($order && $order->status === 'served') {
+                $updateData['status'] = 'completed';
+                $updateData['completed_at'] = date('Y-m-d H:i:s');
+            }
+            // Otherwise, keep the current status (ready/pending/etc)
+            // Status will become 'completed' when waiter marks it as 'served'
             
             $this->orderModel->update($orderId, $updateData);
             

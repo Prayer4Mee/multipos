@@ -36,7 +36,8 @@
                         <!-- Today's Sales -->
                         <div>
                             <h6 class="card-title mb-1">Today's Sales</h6>
-                            <h4 class="mb-0">₱0.00</h4>
+                            <h4 class="mb-0">₱<?= number_format($order_stats['today_revenue'] ?? 0, 2) ?></h4>
+
                         </div>
                         <!-- End: Today's Sales -->
                     </div>
@@ -53,7 +54,7 @@
                         <!-- Orders Today -->
                         <div>
                             <h6 class="card-title mb-1">Orders Today</h6>
-                            <h4 class="mb-0">0</h4>
+                            <h4 class="mb-0"><?= $order_stats['orders_today'] ?? 0 ?></h4>
                         </div>
                         <!-- End: Orders Today -->
                     </div>
@@ -70,7 +71,7 @@
                         <!-- Pending Orders -->
                         <div>
                             <h6 class="card-title mb-1">Pending Orders</h6>
-                            <h4 class="mb-0">0</h4>
+                            <h4 class="mb-0"><?= $order_stats['pending_orders'] ?? 0 ?></h4>
                         </div>
                         <!-- End: Pending Orders -->
                     </div>
@@ -87,7 +88,7 @@
                         <!-- Active Tables -->
                         <div>
                             <h6 class="card-title mb-1">Active Tables</h6>
-                            <h4 class="mb-0">0</h4>
+                             <h4 class="mb-0"><?= $active_tables ?? 0 ?></h4>
                         </div>
                         <!-- End: Active Tables -->
                     </div>
@@ -221,13 +222,13 @@
                     <div class="row">
                         <div class="col-md-3">
                             <div class="text-center">
-                                <h3 class="text-primary"><?= $employee_stats['total_employees'] ?></h3>
+                                <h3 class="text-primary"><?= $employee_stats['total_employees'] ?? 0 ?></h3>
                                 <p class="text-muted">Total Employees</p>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-center">
-                                <h3 class="text-success"><?= $employee_stats['active_employees'] ?></h3>
+                                <h3 class="text-success"><?= $employee_stats['active_employees'] ?? 0 ?></h3>
                                 <p class="text-muted">Active Employees</p>
                             </div>
                         </div>

@@ -65,20 +65,35 @@ class Dashboard extends BaseRestaurantController
         try {
             // Get order statistics
             $today = date('Y-m-d');
+            // Orders today excluding created and cancelled
+            $orderStats['orders_today'] = $this->tenantDb->table('orders')
+                                                ->where('DATE(ordered_at)', $today)
+                                                ->whereNotIn('status', ['created', 'cancelled'])
+                                                ->countAllResults();
+            // Pending Orders
             $orderStats['pending_orders'] = $this->tenantDb->table('orders')
                                                          ->where('status', 'pending')
+                                                         ->where('DATE(ordered_at)', $today)
                                                          ->countAllResults();
-            
+            // Preparing Orders
             $orderStats['preparing_orders'] = $this->tenantDb->table('orders')
                                                            ->where('status', 'preparing')
+                                                           ->where('DATE(ordered_at)', $today)
                                                            ->countAllResults();
-            
+            // Completed Orders - served + paid
             $orderStats['completed_orders'] = $this->tenantDb->table('orders')
                                                            ->where('status', 'completed')
-                                                        //    ->where('payment_status', 'paid') if needed along with completed status
+                                                           ->where('payment_status', 'paid') // if needed along with completed status
                                                            ->where('DATE(ordered_at)', $today)
                                                            ->countAllResults();
 
+            // Get active tables available, but not including unavailable
+            $active_tables = $this->tenantDb->table('restaurant_tables')
+                    ->where('tenant_id', $this->tenantId)
+                    ->whereIn('status', ['available','occupied','reserved','cleaning'])
+                    ->where('is_active', 1)
+                    ->countAllResults();
+                    
             // Get today's revenue
             $revenueResult = $this->tenantDb->table('orders')
                                           ->select('SUM(total_amount) as total_revenue')
@@ -100,8 +115,33 @@ class Dashboard extends BaseRestaurantController
                                          ->get()
                                          ->getResult();
 
+            // Get Employees stats
+            $staffMembers = $this->tenantDb->table('staff')
+                         ->where('tenant_id', $this->tenantId)
+                         ->orderBy('role, first_name')
+                         ->get()
+                         ->getResult();
+
+            $totalEmployees = count($staffMembers);
+            $activeEmployees = count(array_filter($staffMembers, function($staff) {
+                return $staff->employment_status === 'active';
+            }));
+
+            // Group by role
+            $employeesByRole = [];
+            foreach ($staffMembers as $staff) {
+                $role = $staff->role;
+                if (!isset($employeesByRole[$role])) {
+                    $employeesByRole[$role] = 0;
+                }
+                $employeesByRole[$role]++;
+            }
+
         } catch (\Exception $e) {
             log_message('error', 'Failed to get order statistics: ' . $e->getMessage());
+            $totalEmployees = 0;
+            $activeEmployees = 0;
+            $employeesByRole = [];
         }
         
         $data = [
@@ -116,6 +156,7 @@ class Dashboard extends BaseRestaurantController
                 'employees_by_role' => $employeesByRole
             ],
             'order_stats' => $orderStats,
+            'active_tables' => $active_tables,
             'recent_orders' => $recentOrders
         ];
 
@@ -474,6 +515,7 @@ class Dashboard extends BaseRestaurantController
             $serviceCharge = $this->request->getPost('service_charge') ?: $this->request->getGet('service_charge');
             $vat = $this->request->getPost('vat_amount') ?: $this->request->getGet('vat_amount');
             $total = $this->request->getPost('total_amount') ?: $this->request->getGet('total_amount');
+            $paymentMethod = $this->request->getPost('payment_method') ?: 'cash';
             
             // Get form data v2 - getVar method
             // $requestMethod = $this->request->getMethod();
@@ -483,6 +525,7 @@ class Dashboard extends BaseRestaurantController
             // $serviceCharge = $this->request->getVar('service_charge');
             // $vat = $this->request->getVar('vat_amount');
             // $total = $this->request->getVar('total_amount');
+            //$paymentMethod = $this->request->getVar('payment_method');
 
             // 디버깅을 위한 로그
             log_message('info', 'Creating order with data: ' . json_encode([
@@ -490,7 +533,8 @@ class Dashboard extends BaseRestaurantController
                 'customer_name' => $customerName,
                 'items' => $items,
                 'subtotal' => $subtotal,
-                'total' => $total
+                'total' => $total,
+                'payment_method' => $paymentMethod
             ]));
 
             // Generate order number
@@ -508,9 +552,11 @@ class Dashboard extends BaseRestaurantController
                 'vat_amount' => (float)$vat, // formerly vat but in db vat_amount
                 'total_amount' => (float)$total,
                 'status' => 'created',
+                'payment_method' => $paymentMethod,  // ✅ ADD THIS LINE
                 'payment_status' => 'pending',
                 'ordered_at' => date('Y-m-d H:i:s'),
                 'created_at' => date('Y-m-d H:i:s')
+
             ];
             // Safeguard: Check if table exists
             $currentTable = $this->tenantDb->table('restaurant_tables')
@@ -1164,7 +1210,7 @@ class Dashboard extends BaseRestaurantController
         try {
             $staffMembers = $this->tenantDb->table('staff')
                                          ->where('tenant_id', $this->tenantId)
-                                         ->where('is_active', 1)
+                                         ->where('employment_status', 'active')
                                          ->orderBy('role, first_name')
                                          ->get()
                                          ->getResult();
@@ -1447,7 +1493,7 @@ class Dashboard extends BaseRestaurantController
     }
 
 
-// Take note: below is POS System
+// Take note: below is POS System - this is the left side
     public function currentOrders()
     {
         if (!$this->request->isAJAX()) {
@@ -1461,15 +1507,36 @@ class Dashboard extends BaseRestaurantController
             $orderModel->setDB($this->tenantDb);
            
             // 활성 주문만 필터링 (완료되지 않은 주문)
-            $filters = [
-                'status' => ['created', 'pending', 'confirmed', 'preparing', 'ready', 'served', 'paid']
-            ];
+            // Get ACTIVE orders only (not paid, not completed)
+            $orders = $this->tenantDb->table('orders as o')
+                                ->select('o.*, rt.table_number, COUNT(oi.id) as item_count')
+                                ->join('restaurant_tables rt', 'o.table_id = rt.id', 'left')
+                                ->join('order_items oi', 'o.id = oi.order_id', 'left')
+                                ->where('o.payment_status !=', 'paid')  // Exclude paid orders
+                                ->where('o.status !=', 'completed')     // Exclude completed orders
+                                ->where('o.status !=', 'cancelled')     // Exclude cancelled orders
+                                ->groupBy('o.id')
+                                ->orderBy('o.created_at', 'DESC')
+                                ->get()
+                                ->getResult();
             
-            $orders = $orderModel->getOrdersWithDetails($filters);
-            // Added for guest count
+            // Add guest count and items for each order
             foreach ($orders as $order) {
-                $order->guest_count = $order->guest_count ?? null; // add this line
+                $order->guest_count = $order->guest_count ?? null;
+                $order->items = $this->tenantDb->table('order_items as oi')
+                                            ->select('oi.*, mi.name as menu_item_name')
+                                            ->join('menu_items mi', 'oi.menu_item_id = mi.id', 'left')
+                                            ->where('oi.order_id', $order->id)
+                                            ->get()
+                                            ->getResult();
             }
+            // // Filter out orders that are already paid
+            // $orders = array_filter($orders, function($order) {
+            //     $status = property_exists($order, 'payment_status') ? strtolower($order->payment_status) : '';
+            //     return $status !== 'paid';
+            // });
+
+
 
 
             return $this->response->setJSON([

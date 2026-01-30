@@ -150,7 +150,7 @@ class Reports extends BaseRestaurantController
      */
     private function getSummaryMetrics($fromDate = null, $toDate = null): object
     {
-         $whereClause = "WHERE status = 'completed'";
+        $whereClause = "WHERE payment_status = 'paid' AND status != 'cancelled'";
         $params = [];
 
         if ($fromDate && $toDate) {
@@ -177,7 +177,7 @@ class Reports extends BaseRestaurantController
     private function getDailySalesReport($fromDate = null, $toDate = null): array
     {
          try {
-            $whereClause = "WHERE status = 'completed'";
+            $whereClause = "WHERE payment_status = 'paid' AND status != 'cancelled'";
             $params = [];
 
             if ($fromDate && $toDate) {
@@ -212,7 +212,7 @@ class Reports extends BaseRestaurantController
     {
         try{
             // We filter by 'completed' status so cancelled orders don't skew popularity
-            $whereClause = "WHERE o.status = 'completed'";
+            $whereClause = "WHERE o.payment_status = 'paid' AND o.status != 'cancelled'";
             $params = [];
 
             if ($fromDate && $toDate) {
@@ -252,7 +252,7 @@ class Reports extends BaseRestaurantController
     private function getPaymentMethodsReport($fromDate = null, $toDate = null): array
     {
         try {
-            $whereClause = "WHERE status = 'completed'";
+            $whereClause = "WHERE payment_status = 'paid' AND status != 'cancelled'";
             $params = [];
 
             if ($fromDate && $toDate) {
@@ -318,7 +318,7 @@ class Reports extends BaseRestaurantController
     private function getHourlySalesReport($fromDate = null, $toDate = null): array
     {
         try {
-            $whereClause = "WHERE status = 'completed'";
+            $whereClause = "WHERE payment_status = 'paid' AND status != 'cancelled'";
             $params = [];
 
             if ($fromDate && $toDate) {
